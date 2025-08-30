@@ -13,14 +13,28 @@ fi
 # Function to set production environment
 set_production_env() {
     echo "Setting production environment..."
-    echo "NEXT_PUBLIC_API_URL=https://kabaddi-guru-backend-5uvrtavjca-uc.a.run.app" > .env.local
+    cat > .env.local << EOF
+# Production Environment Configuration
+NEXT_PUBLIC_API_URL=https://api.thekabaddiguru.com
+NEXT_PUBLIC_APP_NAME=Kabaddi Guru Analytics
+NEXT_PUBLIC_APP_VERSION=1.0.0
+NEXT_PUBLIC_DEBUG_MODE=false
+NODE_ENV=production
+EOF
     echo "Production environment set!"
 }
 
 # Function to set development environment
 set_dev_env() {
     echo "Setting development environment..."
-    echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
+    cat > .env.local << EOF
+# Development Environment Configuration
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_APP_NAME=Kabaddi Guru Analytics
+NEXT_PUBLIC_APP_VERSION=1.0.0
+NEXT_PUBLIC_DEBUG_MODE=true
+NODE_ENV=development
+EOF
     echo "Development environment set!"
 }
 

@@ -33,9 +33,14 @@ export default function HomePage() {
               <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
                 <Bot className="w-5 h-5 text-white" />
               </div>
-              <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                KabaddiGuru
-              </span>
+              <div className="flex flex-col">
+                <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+                  KabaddiGuru
+                </span>
+                <span className="text-xs text-gray-600 font-medium">
+                  Home
+                </span>
+              </div>
             </div>
             
             {/* Desktop Navigation */}
@@ -46,9 +51,9 @@ export default function HomePage() {
               <Link href="/analytics">
                 <Button variant="ghost">Analytics Tool</Button>
               </Link>
-              {/* <Link href="/dashboard">
+              <Link href="/dashboard">
                 <Button variant="ghost">Dashboard</Button>
-              </Link> */}
+              </Link>
               {/* <Link href="/upload">
                 <Button variant="ghost">Upload Data</Button>
               </Link> */}

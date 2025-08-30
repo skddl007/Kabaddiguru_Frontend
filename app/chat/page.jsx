@@ -47,7 +47,7 @@ import ChatLimitBanner from "@/components/ChatLimitBanner"
 import { useUser } from "@/contexts/UserContext"
 import { useRouter } from "next/navigation"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+import { sendMessage as sendMessageApi, generateSummary as generateSummaryApi, submitFeedback as submitFeedbackApi } from "@/lib/api-client"
 
 export default function ChatPage() {
   const router = useRouter()
@@ -223,7 +223,7 @@ export default function ChatPage() {
   const loadSuggestions = async () => {
     setSuggestionsLoading(true)
     try {
-      const response = await fetch(`${API_BASE_URL}/suggestions`)
+      const response = await fetch(`/api/suggestions`)
       if (response.ok) {
         const data = await response.json()
         setSuggestions(data.suggestions || [])
@@ -237,58 +237,15 @@ export default function ChatPage() {
   }
 
   const sendMessage = async (message, chatId, authToken) => {
-    const response = await fetch(`${API_BASE_URL}/chat`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(authToken && { "Authorization": `Bearer ${authToken}` })
-      },
-      body: JSON.stringify({
-        message: message,
-        chat_id: chatId
-      })
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.detail || "Failed to send message")
-    }
-
-    return await response.json()
+    return await sendMessageApi(message, chatId, authToken)
   }
 
   const generateSummary = async (chatId) => {
-    const response = await fetch(`${API_BASE_URL}/summary`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token && { "Authorization": `Bearer ${token}` })
-      },
-      body: JSON.stringify({ chat_id: chatId })
-    })
-
-    if (!response.ok) {
-      throw new Error("Failed to generate summary")
-    }
-
-    return await response.json()
+    return await generateSummaryApi(chatId)
   }
 
   const submitFeedback = async (feedbackData) => {
-    const response = await fetch(`${API_BASE_URL}/feedback`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token && { "Authorization": `Bearer ${token}` })
-      },
-      body: JSON.stringify(feedbackData)
-    })
-
-    if (!response.ok) {
-      throw new Error("Failed to submit feedback")
-    }
-
-    return await response.json()
+    return await submitFeedbackApi(feedbackData)
   }
 
   const scrollToBottom = () => {
@@ -870,8 +827,20 @@ export default function ChatPage() {
                     <MessageSquare className="w-4 h-4" />
                   </Button>
                   <div>
-                    <h1 className="text-lg lg:text-xl font-semibold text-gray-900">KabaddiGuru Chat</h1>
-                    <p className="text-sm text-gray-500 hidden sm:block">Ask questions about your Kabaddi data</p>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
+                        <Bot className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-lg lg:text-xl font-semibold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+                          KabaddiGuru
+                        </span>
+                        <span className="text-xs text-gray-600 font-medium">
+                          Chat
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-500 hidden sm:block mt-1">Ask questions about your Kabaddi data</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">

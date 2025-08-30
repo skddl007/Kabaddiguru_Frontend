@@ -79,7 +79,7 @@ export function UserProvider({ children }) {
     }
     
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/chat-limit`, {
+      const response = await fetch(`/api/auth/chat-limit`, {
         headers: {
           "Authorization": `Bearer ${token}`
         }

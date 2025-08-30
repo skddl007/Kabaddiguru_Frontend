@@ -8,11 +8,14 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BarChart3, Users, Search, Loader2, AlertCircle, CheckCircle, ArrowLeft, TrendingUp, Target, Award } from 'lucide-react'
+import { BarChart3, Users, Search, Loader2, AlertCircle, CheckCircle, ArrowLeft, TrendingUp, Target, Award, Menu, X, LogOut } from 'lucide-react'
 import { toast } from "@/hooks/use-toast"
 import Link from "next/link"
 import AuthWrapper from "@/components/AuthWrapper"
 import ChatLimitBanner from "@/components/ChatLimitBanner"
+import { useUser } from "@/contexts/UserContext"
+import MobileMenu from "@/components/MobileMenu"
+import VideoPlayer from "@/components/VideoPlayer"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
@@ -37,6 +40,39 @@ export default function AnalyticsPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [summaryData, setSummaryData] = useState(null)
   const [error, setError] = useState(null)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [videoPlayerOpen, setVideoPlayerOpen] = useState(false)
+  const [selectedVideo, setSelectedVideo] = useState(null)
+
+  const { user, logout, isAuthenticated } = useUser()
+
+  const cleanPlayerName = (name) => {
+    if (!name) return 'Unknown Player'
+    
+    // If it's already a clean name (from analytics), return as is
+    if (name && !name.includes('_')) return name
+    
+    // Extract the first part before underscore (actual player name)
+    const parts = name.split('_')
+    return parts[0] || 'Unknown Player'
+  }
+
+  const handleWatchVideo = (video) => {
+    // Extract raid_id from timestamp if available
+    let raidId = null
+    if (video.timestamp) {
+      const match = video.timestamp.match(/(\d+)s/)
+      if (match) {
+        raidId = parseInt(match[1])
+      }
+    }
+    
+    setSelectedVideo({
+      ...video,
+      raid_id: raidId
+    })
+    setVideoPlayerOpen(true)
+  }
 
   // Match-wise summary state
   const [teams, setTeams] = useState([])
@@ -247,36 +283,110 @@ export default function AnalyticsPage() {
   return (
     <AuthWrapper>
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="container mx-auto px-4 py-8">
-
-                {/* Chat Limit Banner */}
-        <ChatLimitBanner variant="compact" />
-        
-        {/* Header */}
-        <div className="bg-white shadow-sm border-b">
+      {/* Navigation */}
+      <nav className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Link href="/chat">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Chat
-                </Button>
-              </Link>
-              <div className="flex items-center space-x-2">
-                <BarChart3 className="h-6 w-6 text-blue-600" />
-                <h1 className="text-xl font-bold text-gray-900">KabaddiGuru Analytics Tool</h1>
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+                  KabaddiGuru
+                </span>
+                <span className="text-xs text-gray-600 font-medium">
+                  Analytics
+                </span>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                <TrendingUp className="w-3 h-3 mr-1" />
-                Advanced Analytics
-              </Badge>
+            
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-4">
+              <Link href="/chat">
+                <Button variant="ghost">Chat</Button>
+              </Link>
+              <Link href="/analytics">
+                <Button variant="ghost" className="bg-blue-100 text-blue-700 hover:bg-blue-200 font-medium">
+                  Analytics Tool
+                </Button>
+              </Link>
+              <Link href="/dashboard">
+                <Button variant="ghost">Dashboard</Button>
+              </Link>
+              <div className="w-px h-6 bg-gray-300 mx-2"></div>
+              <Link href="/about">
+                <Button variant="ghost">About</Button>
+              </Link>
+              <Link href="/contact">
+                <Button variant="ghost">Contact</Button>
+              </Link>
+              
+              {isAuthenticated ? (
+                <div className="flex items-center space-x-2">
+                  {(() => {
+                    const displayName = user?.full_name || user?.name || user?.username || (user?.email ? user.email.split('@')[0] : "User")
+                    return (
+                      <span className="text-sm text-gray-600 truncate max-w-[160px] md:max-w-[220px]" title={`Welcome, ${displayName}`}>Welcome, {displayName}</span>
+                    )
+                  })()}
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={logout}
+                    className="flex items-center space-x-1"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Logout</span>
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <Link href="/">
+                    <Button variant="outline" className="font-medium">
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link href="/">
+                    <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600">
+                      Sign Up
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Menu Button */}
+            <div className="md:hidden">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                {isMobileMenuOpen ? (
+                  <X className="w-5 h-5" />
+                ) : (
+                  <Menu className="w-5 h-5" />
+                )}
+              </Button>
             </div>
           </div>
+
+          {/* Mobile Navigation Menu */}
+          <MobileMenu 
+            isOpen={isMobileMenuOpen} 
+            onClose={() => setIsMobileMenuOpen(false)}
+            onAuthModalOpen={(mode) => {
+              // Handle auth modal if needed
+            }}
+            currentPage="analytics"
+          />
         </div>
-      </div>
+      </nav>
+
+      <div className="container mx-auto px-4 py-8">
+        {/* Chat Limit Banner */}
+        <ChatLimitBanner variant="compact" />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -549,23 +659,24 @@ export default function AnalyticsPage() {
                            Super Tackle Videos ({summaryData.super_tackle_videos.length})
                          </h3>
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-64 overflow-y-auto">
-                           {summaryData.super_tackle_videos.slice(0, 2).map((video, index) => (
+                                                      {summaryData.super_tackle_videos.slice(0, 2).map((video, index) => (
                              <div key={index} className="bg-white p-3 rounded-lg border hover:shadow-md transition-shadow">
                                <div className="flex items-center justify-between mb-2">
                                  <span className="text-sm font-medium text-gray-900">Raid {video.raid_no}</span>
                                  <span className="text-xs text-gray-500">{video.timestamp}</span>
                                </div>
-                               <div className="text-sm text-gray-700 mb-2">{video.player}</div>
+                               <div className="text-sm text-gray-700 mb-2">{cleanPlayerName(video.player)}</div>
                                <div className="text-xs text-gray-600 mb-3">{video.description}</div>
-                               <a
-                                 href={video.video_url}
-                                 target="_blank"
-                                 rel="noopener noreferrer"
-                                 className="inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-700 font-medium bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition-colors"
+                               <button
+                                 onClick={() => handleWatchVideo(video)}
+                                 className="video-button inline-flex items-center gap-2 text-sm font-semibold bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white px-4 py-2 rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 border-0 button-glow"
                                >
-                                 <span>▶️</span>
-                                 Watch Super Tackle
-                               </a>
+                                 <div className="relative icon-bounce">
+                                   <span className="text-lg">⚡</span>
+                                   <div className="absolute inset-0 bg-white/20 rounded-full animate-pulse"></div>
+                                 </div>
+                                 <span>Watch Super Tackle</span>
+                               </button>
                              </div>
                            ))}
                            {summaryData.super_tackle_videos.length > 2 && (
@@ -582,17 +693,18 @@ export default function AnalyticsPage() {
                                          <span className="text-sm font-medium text-gray-900">Raid {video.raid_no}</span>
                                          <span className="text-xs text-gray-500">{video.timestamp}</span>
                                        </div>
-                                       <div className="text-sm text-gray-700 mb-2">{video.player}</div>
+                                       <div className="text-sm text-gray-700 mb-2">{cleanPlayerName(video.player)}</div>
                                        <div className="text-xs text-gray-600 mb-3">{video.description}</div>
-                                       <a
-                                         href={video.video_url}
-                                         target="_blank"
-                                         rel="noopener noreferrer"
-                                         className="inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-700 font-medium bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition-colors"
+                                       <button
+                                         onClick={() => handleWatchVideo(video)}
+                                         className="video-button inline-flex items-center gap-2 text-sm font-semibold bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white px-4 py-2 rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 border-0 button-glow"
                                        >
-                                         <span>▶️</span>
-                                         Watch Super Tackle
-                                       </a>
+                                         <div className="relative icon-bounce">
+                                           <span className="text-lg">⚡</span>
+                                           <div className="absolute inset-0 bg-white/20 rounded-full animate-pulse"></div>
+                                         </div>
+                                         <span>Watch Super Tackle</span>
+                                       </button>
                                      </div>
                                    ))}
                                  </div>
@@ -616,17 +728,18 @@ export default function AnalyticsPage() {
                                  <span className="text-sm font-medium text-gray-900">Raid {video.raid_no}</span>
                                  <span className="text-xs text-gray-500">{video.timestamp}</span>
                                </div>
-                               <div className="text-sm text-gray-700 mb-2">{video.player}</div>
+                               <div className="text-sm text-gray-700 mb-2">{cleanPlayerName(video.player)}</div>
                                <div className="text-xs text-gray-600 mb-3">{video.description}</div>
-                               <a
-                                 href={video.video_url}
-                                 target="_blank"
-                                 rel="noopener noreferrer"
-                                 className="inline-flex items-center gap-2 text-sm text-green-600 hover:text-green-700 font-medium bg-green-50 hover:bg-green-100 px-3 py-1 rounded-md transition-colors"
+                               <button
+                                 onClick={() => handleWatchVideo(video)}
+                                 className="video-button inline-flex items-center gap-2 text-sm font-semibold bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-4 py-2 rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 border-0 button-glow"
                                >
-                                 <span>▶️</span>
-                                 Watch Bonus Point
-                               </a>
+                                 <div className="relative icon-bounce">
+                                   <span className="text-lg">🎯</span>
+                                   <div className="absolute inset-0 bg-white/20 rounded-full animate-pulse"></div>
+                                 </div>
+                                 <span>Watch Bonus Point</span>
+                               </button>
                              </div>
                            ))}
                            {summaryData.bonus_point_videos.length > 2 && (
@@ -643,17 +756,18 @@ export default function AnalyticsPage() {
                                          <span className="text-sm font-medium text-gray-900">Raid {video.raid_no}</span>
                                          <span className="text-xs text-gray-500">{video.timestamp}</span>
                                        </div>
-                                       <div className="text-sm text-gray-700 mb-2">{video.player}</div>
+                                       <div className="text-sm text-gray-700 mb-2">{cleanPlayerName(video.player)}</div>
                                        <div className="text-xs text-gray-600 mb-3">{video.description}</div>
-                                       <a
-                                         href={video.video_url}
-                                         target="_blank"
-                                         rel="noopener noreferrer"
-                                         className="inline-flex items-center gap-2 text-sm text-green-600 hover:text-green-700 font-medium bg-green-50 hover:bg-green-100 px-3 py-1 rounded-md transition-colors"
+                                       <button
+                                         onClick={() => handleWatchVideo(video)}
+                                         className="video-button inline-flex items-center gap-2 text-sm font-semibold bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-4 py-2 rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 border-0 button-glow"
                                        >
-                                         <span>▶️</span>
-                                         Watch Bonus Point
-                                       </a>
+                                         <div className="relative icon-bounce">
+                                           <span className="text-lg">🎯</span>
+                                           <div className="absolute inset-0 bg-white/20 rounded-full animate-pulse"></div>
+                                         </div>
+                                         <span>Watch Bonus Point</span>
+                                       </button>
                                      </div>
                                    ))}
                                  </div>
@@ -853,6 +967,14 @@ export default function AnalyticsPage() {
         </div>
       </div>
       </div>
+
+      {/* Video Player Modal */}
+      <VideoPlayer
+        isOpen={videoPlayerOpen}
+        onClose={() => setVideoPlayerOpen(false)}
+        raidId={selectedVideo?.raid_id}
+        raidData={selectedVideo}
+      />
     </div>
     </AuthWrapper>
   )

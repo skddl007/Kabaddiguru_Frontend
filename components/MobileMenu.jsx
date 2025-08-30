@@ -5,7 +5,7 @@ import { X, User, LogOut } from 'lucide-react'
 import Link from "next/link"
 import { useUser } from "@/contexts/UserContext"
 
-export default function MobileMenu({ isOpen, onClose, onAuthModalOpen }) {
+export default function MobileMenu({ isOpen, onClose, onAuthModalOpen, currentPage }) {
   const { user, logout, isAuthenticated } = useUser()
   
   if (!isOpen) return null
@@ -42,15 +42,29 @@ export default function MobileMenu({ isOpen, onClose, onAuthModalOpen }) {
               </Button>
             </Link>
             <Link href="/analytics" onClick={onClose}>
-              <Button variant="ghost" className="w-full justify-start text-left">
+              <Button 
+                variant="ghost" 
+                className={`w-full justify-start text-left ${
+                  currentPage === 'analytics' 
+                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-200 font-medium' 
+                    : ''
+                }`}
+              >
                 Analytics Tool
               </Button>
             </Link>
-            {/* <Link href="/dashboard" onClick={onClose}>
-              <Button variant="ghost" className="w-full justify-start text-left">
+            <Link href="/dashboard" onClick={onClose}>
+              <Button 
+                variant="ghost" 
+                className={`w-full justify-start text-left ${
+                  currentPage === 'dashboard' 
+                    ? 'bg-green-100 text-green-700 hover:bg-green-200 font-medium' 
+                    : ''
+                }`}
+              >
                 Dashboard
               </Button>
-            </Link> */}
+            </Link>
             {/* <Link href="/upload" onClick={onClose}>
               <Button variant="ghost" className="w-full justify-start text-left">
                 Upload Data
