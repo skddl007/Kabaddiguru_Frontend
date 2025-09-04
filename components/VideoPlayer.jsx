@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { useState, useEffect, useRef } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Loader2, X, Play, Pause, Volume2, VolumeX, Maximize2, RotateCcw, AlertCircle } from 'lucide-react'
+import { Loader2, X, Play, Pause, Volume2, VolumeX, Maximize2, RotateCcw, AlertCircle, Gauge } from 'lucide-react'
 import { toast } from "@/hooks/use-toast"
 
 // Team logo mapping with actual image paths
@@ -65,10 +65,14 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [isMuted, setIsMuted] = useState(false)
+  const [isMuted, setIsMuted] = useState(true)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [volume, setVolume] = useState(1)
+  const [playbackSpeed, setPlaybackSpeed] = useState(1)
+  const [showPlayOverlay, setShowPlayOverlay] = useState(false)
+  const videoRef = useRef(null)
+  const playPromiseRef = useRef(null)
 
   useEffect(() => {
     if (isOpen && (raidId || raidData?.video_url)) {
@@ -76,10 +80,152 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
     }
   }, [isOpen, raidId, raidData])
 
+  // Reset video state when video URL changes
+  useEffect(() => {
+    if (videoUrl) {
+      console.log('Video URL changed:', videoUrl)
+      setIsPlaying(false)
+      setCurrentTime(0)
+      setDuration(0)
+      setError(null)
+    }
+  }, [videoUrl])
+
+  // Apply playback speed when it changes
+  useEffect(() => {
+    const video = videoRef.current
+    if (video) {
+      video.playbackRate = playbackSpeed
+    }
+  }, [playbackSpeed])
+
+  // Debug video element state
+  useEffect(() => {
+    const video = videoRef.current
+    if (video && videoUrl) {
+      console.log('Video element state:', {
+        src: video.src,
+        readyState: video.readyState,
+        networkState: video.networkState,
+        paused: video.paused,
+        muted: video.muted,
+        volume: video.volume
+      })
+    }
+  }, [videoUrl])
+
+  // Auto-play video when it's ready
+  useEffect(() => {
+    const video = videoRef.current
+    if (video && videoUrl && !isLoading && !error) {
+      const attemptAutoPlay = async () => {
+        try {
+          console.log('Attempting to auto-play video')
+          playPromiseRef.current = video.play()
+          await playPromiseRef.current
+          playPromiseRef.current = null
+          setShowPlayOverlay(false)
+          console.log('Video auto-played successfully')
+          return true
+        } catch (playErr) {
+          console.error('Auto-play failed:', playErr)
+          playPromiseRef.current = null
+          if (playErr.name === 'NotAllowedError') {
+            console.log('Auto-play blocked by browser, showing play overlay')
+            setShowPlayOverlay(true)
+          } else {
+            console.log('Auto-play failed for other reason, showing play overlay')
+            setShowPlayOverlay(true)
+          }
+          return false
+        }
+      }
+
+      const handleCanPlay = async () => {
+        try {
+          // Clear any existing play promise
+          if (playPromiseRef.current) {
+            playPromiseRef.current = null
+          }
+          
+          console.log('Video is ready to play, attempting auto-play')
+          
+          // Try to play immediately when video is ready
+          if (video && video.readyState >= 2) { // HAVE_CURRENT_DATA or higher
+            const success = await attemptAutoPlay()
+            if (!success) {
+              // Try again after a short delay
+              setTimeout(async () => {
+                if (video && video.readyState >= 2) {
+                  await attemptAutoPlay()
+                }
+              }, 1000)
+            }
+          } else {
+            console.log('Video not ready yet, showing play overlay')
+            setShowPlayOverlay(true)
+          }
+        } catch (err) {
+          console.error('Auto-play setup failed:', err)
+          setShowPlayOverlay(true)
+        }
+      }
+
+      // Wait for the video to be ready
+      if (video.readyState >= 2) {
+        handleCanPlay()
+      } else {
+        video.addEventListener('canplay', handleCanPlay, { once: true })
+        video.addEventListener('loadeddata', handleCanPlay, { once: true })
+        video.addEventListener('canplaythrough', handleCanPlay, { once: true })
+      }
+
+      return () => {
+        video.removeEventListener('canplay', handleCanPlay)
+        video.removeEventListener('loadeddata', handleCanPlay)
+        video.removeEventListener('canplaythrough', handleCanPlay)
+      }
+    }
+  }, [videoUrl, isLoading, error])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      const video = videoRef.current
+      if (video) {
+        video.pause()
+        video.load()
+      }
+      if (playPromiseRef.current) {
+        playPromiseRef.current = null
+      }
+    }
+  }, [])
+
   const loadVideoUrl = async () => {
     // If raidData has video_url directly (analytics), use it
     if (raidData?.video_url && raidData.video_url !== "Video not available") {
-      setVideoUrl(raidData.video_url)
+      // Clean and validate the video URL
+      let cleanUrl = raidData.video_url.trim()
+      if (cleanUrl.startsWith("'") && cleanUrl.endsWith("'")) {
+        cleanUrl = cleanUrl.slice(1, -1) // Remove surrounding quotes
+      }
+      
+             // Handle double URL encoding only if needed
+       try {
+         // Check if URL is double-encoded (contains %25)
+         if (cleanUrl.includes('%25')) {
+           console.log('Detected double-encoded URL, decoding twice')
+           cleanUrl = decodeURIComponent(decodeURIComponent(cleanUrl))
+         }
+         // Don't decode or re-encode URLs that are already properly formatted
+         // The database already contains correctly encoded URLs
+       } catch (e) {
+         console.warn('URL parsing failed, using original:', cleanUrl)
+       }
+      
+      console.log('Cleaned video URL:', cleanUrl)
+      setVideoUrl(cleanUrl)
       return
     }
 
@@ -117,6 +263,8 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
   const handleVideoLoad = (event) => {
     const video = event.target
     setDuration(video.duration)
+    // Set initial playback speed
+    video.playbackRate = playbackSpeed
   }
 
   const handleTimeUpdate = (event) => {
@@ -124,20 +272,78 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
     setCurrentTime(video.currentTime)
   }
 
-  const handlePlayPause = () => {
-    const video = document.getElementById('raid-video')
-    if (video) {
+  const handlePlayPause = async () => {
+    const video = videoRef.current
+    if (!video) return
+
+    try {
       if (isPlaying) {
         video.pause()
+        setIsPlaying(false)
+        // Cancel any pending play promise
+        if (playPromiseRef.current) {
+          playPromiseRef.current = null
+        }
       } else {
-        video.play()
+        // Cancel any existing play promise
+        if (playPromiseRef.current) {
+          playPromiseRef.current = null
+        }
+        
+        console.log('Manual play button clicked')
+        setShowPlayOverlay(false)
+        
+        // Ensure video is loaded and ready
+        if (video.readyState < 2) {
+          console.log('Video not ready, loading first')
+          setIsLoading(true)
+          video.load()
+          
+          const handleCanPlay = async () => {
+            try {
+              console.log('Video loaded, attempting to play')
+              playPromiseRef.current = video.play()
+              await playPromiseRef.current
+              playPromiseRef.current = null
+              setIsLoading(false)
+              console.log('Video started playing successfully')
+            } catch (err) {
+              console.error('Error playing video after load:', err)
+              setIsLoading(false)
+              if (err.name !== 'AbortError') {
+                setError('Failed to play video')
+              }
+            }
+          }
+          video.addEventListener('canplay', handleCanPlay, { once: true })
+        } else {
+          // Video is ready, try to play immediately
+          try {
+            console.log('Video ready, attempting to play')
+            playPromiseRef.current = video.play()
+            await playPromiseRef.current
+            playPromiseRef.current = null
+            console.log('Video started playing successfully')
+          } catch (err) {
+            console.error('Error playing ready video:', err)
+            if (err.name !== 'AbortError') {
+              setError('Failed to play video')
+            }
+          }
+        }
       }
-      setIsPlaying(!isPlaying)
+    } catch (err) {
+      console.error('Error with video playback:', err)
+      if (err.name !== 'AbortError') {
+        setError('Failed to play video')
+      }
+      setIsPlaying(false)
+      playPromiseRef.current = null
     }
   }
 
   const handleMuteToggle = () => {
-    const video = document.getElementById('raid-video')
+    const video = videoRef.current
     if (video) {
       video.muted = !isMuted
       setIsMuted(!isMuted)
@@ -146,7 +352,7 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
 
   const handleVolumeChange = (event) => {
     const newVolume = parseFloat(event.target.value)
-    const video = document.getElementById('raid-video')
+    const video = videoRef.current
     if (video) {
       video.volume = newVolume
       setVolume(newVolume)
@@ -154,8 +360,16 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
     }
   }
 
+  const handlePlaybackSpeedChange = (speed) => {
+    const video = videoRef.current
+    if (video) {
+      video.playbackRate = speed
+      setPlaybackSpeed(speed)
+    }
+  }
+
   const handleSeek = (event) => {
-    const video = document.getElementById('raid-video')
+    const video = videoRef.current
     const seekTime = parseFloat(event.target.value)
     if (video) {
       video.currentTime = seekTime
@@ -164,7 +378,7 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
   }
 
   const handleFullscreen = () => {
-    const video = document.getElementById('raid-video')
+    const video = videoRef.current
     if (video) {
       if (document.fullscreenElement) {
         document.exitFullscreen()
@@ -174,13 +388,29 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
     }
   }
 
-  const handleRestart = () => {
-    const video = document.getElementById('raid-video')
+  const handleRestart = async () => {
+    const video = videoRef.current
     if (video) {
-      video.currentTime = 0
-      setCurrentTime(0)
-      video.play()
-      setIsPlaying(true)
+      try {
+        // Cancel any pending play promise
+        if (playPromiseRef.current) {
+          playPromiseRef.current = null
+        }
+        
+        video.currentTime = 0
+        setCurrentTime(0)
+        playPromiseRef.current = video.play()
+        await playPromiseRef.current
+        playPromiseRef.current = null
+        // Don't set isPlaying here - let the onPlay event handle it
+      } catch (err) {
+        console.error('Error restarting video:', err)
+        if (err.name !== 'AbortError') {
+          setError('Failed to restart video')
+        }
+        setIsPlaying(false)
+        playPromiseRef.current = null
+      }
     }
   }
 
@@ -202,11 +432,26 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
   }
 
   const handleClose = () => {
+    // Pause and reset video before closing
+    const video = videoRef.current
+    if (video) {
+      // Cancel any pending play requests
+      if (playPromiseRef.current) {
+        playPromiseRef.current = null
+      }
+      video.pause()
+      video.currentTime = 0
+      video.load() // Reset the video element
+    }
+    
     setVideoUrl(null)
     setError(null)
     setIsPlaying(false)
     setCurrentTime(0)
     setDuration(0)
+    setIsLoading(false)
+    setShowPlayOverlay(false)
+    setPlaybackSpeed(1)
     onClose()
   }
 
@@ -225,6 +470,9 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
               <X className="h-4 w-4" />
             </Button>
           </DialogTitle>
+          <DialogDescription>
+            Watch the raid video with custom controls
+          </DialogDescription>
         </DialogHeader>
 
         <div className="relative bg-black rounded-lg overflow-hidden">
@@ -253,19 +501,105 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
 
           {videoUrl && !isLoading && !error && (
             <>
-              <video
-                id="raid-video"
-                className="w-full h-auto max-h-96"
-                controls={false}
-                onLoadedMetadata={handleVideoLoad}
-                onTimeUpdate={handleTimeUpdate}
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-                onEnded={() => setIsPlaying(false)}
-              >
-                <source src={videoUrl} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
+              <div className="relative">
+                <video
+                  ref={videoRef}
+                  id="raid-video"
+                  className="w-full h-auto max-h-96"
+                  controls={false}
+                  preload="metadata"
+                  muted={isMuted}
+                  playsInline
+                  autoPlay
+                  crossOrigin="anonymous"
+                  src={videoUrl}
+                  onLoadedMetadata={(e) => {
+                    console.log('Video metadata loaded')
+                    handleVideoLoad(e)
+                  }}
+                  onTimeUpdate={handleTimeUpdate}
+                  onPlay={() => {
+                    console.log('Video started playing')
+                    setIsPlaying(true)
+                    setShowPlayOverlay(false)
+                    setIsLoading(false)
+                  }}
+                  onPause={() => {
+                    console.log('Video paused')
+                    setIsPlaying(false)
+                  }}
+                  onEnded={() => {
+                    console.log('Video ended')
+                    setIsPlaying(false)
+                  }}
+                  onWaiting={() => {
+                    console.log('Video waiting for data')
+                    setIsLoading(true)
+                  }}
+                  onPlaying={() => {
+                    console.log('Video is playing')
+                    setIsLoading(false)
+                  }}
+                  onError={(e) => {
+                    console.error('Video error:', e)
+                    const video = e.target
+                    const error = video.error
+                    let errorMessage = 'Failed to load video'
+                    
+                    if (error) {
+                      switch (error.code) {
+                        case error.MEDIA_ERR_ABORTED:
+                          errorMessage = 'Video loading was aborted'
+                          break
+                        case error.MEDIA_ERR_NETWORK:
+                          errorMessage = 'Network error while loading video'
+                          break
+                        case error.MEDIA_ERR_DECODE:
+                          errorMessage = 'Video format not supported'
+                          break
+                        case error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+                          errorMessage = 'Video source not supported'
+                          break
+                        default:
+                          errorMessage = 'Unknown video error'
+                      }
+                    }
+                    
+                    setError(errorMessage)
+                  }}
+                  onLoadStart={() => {
+                    console.log('Video load started')
+                    setIsLoading(true)
+                  }}
+                  onCanPlay={() => {
+                    console.log('Video can play')
+                    setIsLoading(false)
+                  }}
+                  onCanPlayThrough={() => {
+                    console.log('Video can play through')
+                    setIsLoading(false)
+                  }}
+                  onLoadedData={() => {
+                    console.log('Video data loaded')
+                    setIsLoading(false)
+                  }}
+                >
+                  Your browser does not support the video tag.
+                </video>
+
+                {/* Play Overlay */}
+                {showPlayOverlay && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                    <Button
+                      onClick={handlePlayPause}
+                      className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+                      size="lg"
+                    >
+                      <Play className="h-8 w-8" />
+                    </Button>
+                  </div>
+                )}
+              </div>
 
               {/* Custom Video Controls */}
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
@@ -326,6 +660,25 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
                       onChange={handleVolumeChange}
                       className="w-16 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer slider"
                     />
+
+                    {/* Playback Speed Selector */}
+                    <div className="flex items-center space-x-1">
+                      <Gauge className="h-4 w-4 text-white" />
+                      <select
+                        value={playbackSpeed}
+                        onChange={(e) => handlePlaybackSpeedChange(parseFloat(e.target.value))}
+                        className="bg-transparent text-white text-xs border border-white/30 rounded px-1 py-0.5 focus:outline-none focus:border-white/50"
+                      >
+                        <option value={0.25} className="bg-black text-white">0.25x</option>
+                        <option value={0.5} className="bg-black text-white">0.5x</option>
+                        <option value={0.75} className="bg-black text-white">0.75x</option>
+                        <option value={1} className="bg-black text-white">1x</option>
+                        <option value={1.25} className="bg-black text-white">1.25x</option>
+                        <option value={1.5} className="bg-black text-white">1.5x</option>
+                        <option value={1.75} className="bg-black text-white">1.75x</option>
+                        <option value={2} className="bg-black text-white">2x</option>
+                      </select>
+                    </div>
 
                     <Button
                       variant="ghost"

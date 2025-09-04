@@ -48,6 +48,7 @@ import { useUser } from "@/contexts/UserContext"
 import { useRouter } from "next/navigation"
 
 import { sendMessage as sendMessageApi, generateSummary as generateSummaryApi, submitFeedback as submitFeedbackApi } from "@/lib/api-client"
+// Removed VideoPlayer import - using simple iframe approach
 
 // Team logo mapping with actual image paths
 const TEAM_LOGOS = {
@@ -143,6 +144,8 @@ export default function ChatPage() {
   const [showFeedbackForm, setShowFeedbackForm] = useState({}) // Track feedback form visibility
   const [feedbackText, setFeedbackText] = useState({}) // Track feedback text for each message
   const [sidebarOpen, setSidebarOpen] = useState(false) // Track sidebar open state
+  const [videoPlayerOpen, setVideoPlayerOpen] = useState(false) // Track video player modal state
+  const [selectedVideoData, setSelectedVideoData] = useState(null) // Track selected video data
   const messagesEndRef = useRef(null)
 
   // Auto new thread after inactivity (similar to ChatGPT behavior where sessions are distinct)
@@ -160,6 +163,50 @@ export default function ChatPage() {
     const words = cleaned.split(' ').slice(0, 6).join(' ')
     const capped = words.length > 32 ? words.slice(0, 32).trim() + '…' : words
     return capped.charAt(0).toUpperCase() + capped.slice(1)
+  }
+
+  // Helper function to clean player names (remove suffixes like _RIN_TT17)
+  const cleanPlayerName = (name) => {
+    if (!name) return 'Unknown Player'
+    
+    // If it's already a clean name (from analytics), return as is
+    if (name && !name.includes('_')) return name
+    
+    // Extract the first part before underscore (actual player name)
+    const parts = name.split('_')
+    return parts[0] || 'Unknown Player'
+  }
+
+  // Helper function to clean video URLs (handle double encoding only)
+  const cleanVideoUrl = (url) => {
+    if (!url) return url
+    
+    // Remove surrounding quotes if present
+    let cleanUrl = url.trim()
+    if (cleanUrl.startsWith("'") && cleanUrl.endsWith("'")) {
+      cleanUrl = cleanUrl.slice(1, -1)
+    }
+    
+    // Only handle double URL encoding, don't decode already correct URLs
+    if (cleanUrl.includes('%25')) {
+      console.log('Detected double-encoded URL, decoding twice')
+      cleanUrl = decodeURIComponent(decodeURIComponent(cleanUrl))
+    }
+    // Don't decode URLs that are already properly encoded from database
+    
+    return cleanUrl
+  }
+
+  // Helper function to handle video button clicks - now using simple iframe
+  const handleVideoClick = (videoUrl, playerName, teamCode, raidNo, description) => {
+    setSelectedVideoData({
+      video_url: cleanVideoUrl(videoUrl),
+      player: cleanPlayerName(playerName),
+      team: teamCode,
+      raid_no: raidNo,
+      description: description || 'Raid Video'
+    })
+    setVideoPlayerOpen(true)
   }
 
   // Chat limits are managed globally in UserContext; no need to fetch here
@@ -273,6 +320,14 @@ export default function ChatPage() {
       loadSuggestions()
     }
   }, [suggestionsLoaded, suggestionsLoading])
+
+  // Set up global window function for video clicks
+  useEffect(() => {
+    window.handleVideoClick = handleVideoClick
+    return () => {
+      delete window.handleVideoClick
+    }
+  }, [])
 
   const loadSuggestions = async () => {
     setSuggestionsLoading(true)
@@ -590,8 +645,188 @@ export default function ChatPage() {
       if (!text) return ""
       
       // Handle tables with robust parsing
+      // First, try to handle tab-separated tables (like the user's example)
+      const tabTableRegex = /((?:[^\n]+\t[^\n]+(?:\n|$)){2,})/g
+      let formattedText = text.replace(tabTableRegex, (match) => {
+        try {
+          const lines = match.trim().split('\n').filter(line => line.trim())
+          if (lines.length < 2) return match
+          
+          // First line is headers
+          const headerLine = lines[0]
+          const headerCells = headerLine.split('\t').map(h => h.trim()).filter(h => h)
+          
+          // Data rows
+          const dataRows = lines.slice(1).map(line => {
+            const cells = line.split('\t').map(cell => cell.trim()).filter(cell => cell)
+            return cells
+          }).filter(row => row.length > 0 && row.length === headerCells.length)
+          
+          if (headerCells.length === 0 || dataRows.length === 0) {
+            return match
+          }
+          
+          // Find Raid ID column index to exclude it
+          const raidIdIndex = headerCells.findIndex(header => 
+            header.toLowerCase().includes('raid id') || header.toLowerCase().includes('raid_id')
+          )
+          
+          // Filter out Raid ID column from headers and rows
+          const filteredHeaders = headerCells.filter((_, index) => index !== raidIdIndex)
+          const filteredRows = dataRows.map(row => row.filter((_, index) => index !== raidIdIndex))
+          
+          let tableHtml = '<div class="overflow-x-auto my-4"><table class="min-w-full border border-gray-200 rounded-lg">'
+          tableHtml += '<thead class="bg-gray-50"><tr>'
+          filteredHeaders.forEach(header => {
+            tableHtml += `<th class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b">${header}</th>`
+          })
+          tableHtml += '</tr></thead><tbody>'
+          
+          filteredRows.forEach((row, index) => {
+            tableHtml += `<tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">`
+            row.forEach((cell, cellIndex) => {
+              const header = filteredHeaders[cellIndex]
+              
+              // Clean player names in Attacking Player column
+              if (header && (header.toLowerCase().includes('attacking player') || header.toLowerCase().includes('player'))) {
+                cell = cleanPlayerName(cell)
+              }
+              
+              // Check for markdown links [Watch Video](url) or direct URLs
+              const markdownLinkMatch = cell.match(/\[Watch Video\]\((https?:\/\/[^\)]+)\)/)
+              const directUrlMatch = cell.match(/https?:\/\/[^\s\)]+/)
+              
+              if (markdownLinkMatch || (directUrlMatch && (cell.includes('.mp4') || cell.includes('video') || cell.includes('vod.')))) {
+                // Extract video URL from markdown link or direct URL
+                let videoUrl = markdownLinkMatch ? markdownLinkMatch[1] : directUrlMatch[0]
+                
+                // Clean the video URL (handle double encoding)
+                videoUrl = cleanVideoUrl(videoUrl)
+                const buttonId = `video-btn-${Date.now()}-${index}-${cellIndex}`
+                
+                // Get player name from the first column (assuming it's the player column)
+                const playerName = row[0] || ''
+                const teamCode = row[1] || ''
+                const raidNo = row[2] || ''
+                
+                tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">
+                  <button 
+                    id="${buttonId}"
+                    class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
+                    onclick="window.handleVideoClick && window.handleVideoClick('${videoUrl}', '${playerName}', '${teamCode}', '${raidNo}', '${header || ''}')"
+                  >
+                    🎥 Watch Video
+                  </button>
+                </td>`
+              } else {
+                tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">${cell}</td>`
+              }
+            })
+            tableHtml += '</tr>'
+          })
+          
+          tableHtml += '</tbody></table></div>'
+          return tableHtml
+        } catch (error) {
+          console.error('Tab table parsing error:', error)
+          return match
+        }
+      })
+      
+      // Handle space-separated tables (fallback for tab-separated)
+      const spaceTableRegex = /((?:[^\n]+\s{2,}[^\n]+(?:\n|$)){2,})/g
+      formattedText = formattedText.replace(spaceTableRegex, (match) => {
+        // Skip if already processed as a table
+        if (match.includes('<table')) return match
+        
+        try {
+          const lines = match.trim().split('\n').filter(line => line.trim())
+          if (lines.length < 2) return match
+          
+          // First line is headers
+          const headerLine = lines[0]
+          const headerCells = headerLine.split(/\s{2,}/).map(h => h.trim()).filter(h => h)
+          
+          // Data rows
+          const dataRows = lines.slice(1).map(line => {
+            const cells = line.split(/\s{2,}/).map(cell => cell.trim()).filter(cell => cell)
+            return cells
+          }).filter(row => row.length > 0 && row.length === headerCells.length)
+          
+          if (headerCells.length === 0 || dataRows.length === 0) {
+            return match
+          }
+          
+          // Find Raid ID column index to exclude it
+          const raidIdIndex = headerCells.findIndex(header => 
+            header.toLowerCase().includes('raid id') || header.toLowerCase().includes('raid_id')
+          )
+          
+          // Filter out Raid ID column from headers and rows
+          const filteredHeaders = headerCells.filter((_, index) => index !== raidIdIndex)
+          const filteredRows = dataRows.map(row => row.filter((_, index) => index !== raidIdIndex))
+          
+          let tableHtml = '<div class="overflow-x-auto my-4"><table class="min-w-full border border-gray-200 rounded-lg">'
+          tableHtml += '<thead class="bg-gray-50"><tr>'
+          filteredHeaders.forEach(header => {
+            tableHtml += `<th class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b">${header}</th>`
+          })
+          tableHtml += '</tr></thead><tbody>'
+          
+          filteredRows.forEach((row, index) => {
+            tableHtml += `<tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">`
+            row.forEach((cell, cellIndex) => {
+              const header = filteredHeaders[cellIndex]
+              
+              // Clean player names in Attacking Player column
+              if (header && (header.toLowerCase().includes('attacking player') || header.toLowerCase().includes('player'))) {
+                cell = cleanPlayerName(cell)
+              }
+              
+              // Check for markdown links [Watch Video](url) or direct URLs
+              const markdownLinkMatch = cell.match(/\[Watch Video\]\((https?:\/\/[^\)]+)\)/)
+              const directUrlMatch = cell.match(/https?:\/\/[^\s\)]+/)
+              
+              if (markdownLinkMatch || (directUrlMatch && (cell.includes('.mp4') || cell.includes('video') || cell.includes('vod.')))) {
+                // Extract video URL from markdown link or direct URL
+                let videoUrl = markdownLinkMatch ? markdownLinkMatch[1] : directUrlMatch[0]
+                
+                // Clean the video URL (handle double encoding)
+                videoUrl = cleanVideoUrl(videoUrl)
+                const buttonId = `video-btn-${Date.now()}-${index}-${cellIndex}`
+                
+                // Get player name from the first column (assuming it's the player column)
+                const playerName = row[0] || ''
+                const teamCode = row[1] || ''
+                const raidNo = row[2] || ''
+                
+                tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">
+                  <button 
+                    id="${buttonId}"
+                    class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
+                    onclick="window.handleVideoClick && window.handleVideoClick('${videoUrl}', '${playerName}', '${teamCode}', '${raidNo}', '${header || ''}')"
+                  >
+                    🎥 Watch Video
+                  </button>
+                </td>`
+              } else {
+                tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">${cell}</td>`
+              }
+            })
+            tableHtml += '</tr>'
+          })
+          
+          tableHtml += '</tbody></table></div>'
+          return tableHtml
+        } catch (error) {
+          console.error('Space table parsing error:', error)
+          return match
+        }
+      })
+      
+      // Then handle pipe-separated tables
       const tableRegex = /\|(.*?)\|\n\|(.*?)\|\n((?:\|(.*?)\|\n?)*)/g
-      let formattedText = text.replace(tableRegex, (match, headers, separator, rows) => {
+      formattedText = formattedText.replace(tableRegex, (match, headers, separator, rows) => {
         try {
           // Parse headers - split by | and clean up
           const headerCells = headers.split('|').map(h => h.trim()).filter(h => h)
@@ -606,17 +841,56 @@ export default function ChatPage() {
             return match // Return original if parsing fails
           }
           
+          // Find Raid ID column index to exclude it
+          const raidIdIndex = headerCells.findIndex(header => 
+            header.toLowerCase().includes('raid id') || header.toLowerCase().includes('raid_id')
+          )
+          
+          // Filter out Raid ID column from headers and rows
+          const filteredHeaders = headerCells.filter((_, index) => index !== raidIdIndex)
+          const filteredRows = rowsArray.map(row => row.filter((_, index) => index !== raidIdIndex))
+          
           let tableHtml = '<div class="overflow-x-auto my-4"><table class="min-w-full border border-gray-200 rounded-lg">'
           tableHtml += '<thead class="bg-gray-50"><tr>'
-          headerCells.forEach(header => {
+          filteredHeaders.forEach(header => {
             tableHtml += `<th class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b">${header}</th>`
           })
           tableHtml += '</tr></thead><tbody>'
           
-          rowsArray.forEach((row, index) => {
+          filteredRows.forEach((row, index) => {
             tableHtml += `<tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">`
-            row.forEach(cell => {
-              tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">${cell}</td>`
+            row.forEach((cell, cellIndex) => {
+              const header = filteredHeaders[cellIndex]
+              
+              // Clean player names in Attacking Player column
+              if (header && (header.toLowerCase().includes('attacking player') || header.toLowerCase().includes('player'))) {
+                cell = cleanPlayerName(cell)
+              }
+              
+              // Handle video links - replace with Watch Video button
+              // Check for markdown links [Watch Video](url) or direct URLs
+              const markdownLinkMatch = cell.match(/\[Watch Video\]\((https?:\/\/[^\)]+)\)/)
+              const directUrlMatch = cell.match(/https?:\/\/[^\s\)]+/)
+              
+              if (markdownLinkMatch || (directUrlMatch && (cell.includes('.mp4') || cell.includes('video') || cell.includes('vod.')))) {
+                // Extract video URL from markdown link or direct URL
+                let videoUrl = markdownLinkMatch ? markdownLinkMatch[1] : directUrlMatch[0]
+                
+                // Clean the video URL (handle double encoding)
+                videoUrl = cleanVideoUrl(videoUrl)
+                const buttonId = `video-btn-${Date.now()}-${index}-${cellIndex}`
+                tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">
+                  <button 
+                    id="${buttonId}"
+                    class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
+                    onclick="window.handleVideoClick && window.handleVideoClick('${videoUrl}', '${row[0] || ''}', '${row[1] || ''}', '${row[2] || ''}', '${header || ''}')"
+                  >
+                    🎥 Watch Video
+                  </button>
+                </td>`
+              } else {
+                tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">${cell}</td>`
+              }
             })
             tableHtml += '</tr>'
           })
@@ -650,17 +924,56 @@ export default function ChatPage() {
             return match
           }
           
+          // Find Raid ID column index to exclude it
+          const raidIdIndex = headerCells.findIndex(header => 
+            header.toLowerCase().includes('raid id') || header.toLowerCase().includes('raid_id')
+          )
+          
+          // Filter out Raid ID column from headers and rows
+          const filteredHeaders = headerCells.filter((_, index) => index !== raidIdIndex)
+          const filteredRows = dataRows.map(row => row.filter((_, index) => index !== raidIdIndex))
+          
           let tableHtml = '<div class="overflow-x-auto my-4"><table class="min-w-full border border-gray-200 rounded-lg">'
           tableHtml += '<thead class="bg-gray-50"><tr>'
-          headerCells.forEach(header => {
+          filteredHeaders.forEach(header => {
             tableHtml += `<th class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b">${header}</th>`
           })
           tableHtml += '</tr></thead><tbody>'
           
-          dataRows.forEach((row, index) => {
+          filteredRows.forEach((row, index) => {
             tableHtml += `<tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">`
-            row.forEach(cell => {
-              tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">${cell}</td>`
+            row.forEach((cell, cellIndex) => {
+              const header = filteredHeaders[cellIndex]
+              
+              // Clean player names in Attacking Player column
+              if (header && (header.toLowerCase().includes('attacking player') || header.toLowerCase().includes('player'))) {
+                cell = cleanPlayerName(cell)
+              }
+              
+              // Handle video links - replace with Watch Video button
+              // Check for markdown links [Watch Video](url) or direct URLs
+              const markdownLinkMatch = cell.match(/\[Watch Video\]\((https?:\/\/[^\)]+)\)/)
+              const directUrlMatch = cell.match(/https?:\/\/[^\s\)]+/)
+              
+              if (markdownLinkMatch || (directUrlMatch && (cell.includes('.mp4') || cell.includes('video') || cell.includes('vod.')))) {
+                // Extract video URL from markdown link or direct URL
+                let videoUrl = markdownLinkMatch ? markdownLinkMatch[1] : directUrlMatch[0]
+                
+                // Clean the video URL (handle double encoding)
+                videoUrl = cleanVideoUrl(videoUrl)
+                const buttonId = `video-btn-${Date.now()}-${index}-${cellIndex}`
+                tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">
+                  <button 
+                    id="${buttonId}"
+                    class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
+                    onclick="window.handleVideoClick && window.handleVideoClick('${videoUrl}', '${row[0] || ''}', '${row[1] || ''}', '${row[2] || ''}', '${header || ''}')"
+                  >
+                    🎥 Watch Video
+                  </button>
+                </td>`
+              } else {
+                tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">${cell}</td>`
+              }
             })
             tableHtml += '</tr>'
           })
@@ -703,17 +1016,56 @@ export default function ChatPage() {
             return match
           }
           
+          // Find Raid ID column index to exclude it
+          const raidIdIndex = headerCells.findIndex(header => 
+            header.toLowerCase().includes('raid id') || header.toLowerCase().includes('raid_id')
+          )
+          
+          // Filter out Raid ID column from headers and rows
+          const filteredHeaders = headerCells.filter((_, index) => index !== raidIdIndex)
+          const filteredRows = dataRows.map(row => row.filter((_, index) => index !== raidIdIndex))
+          
           let tableHtml = '<div class="overflow-x-auto my-4"><table class="min-w-full border border-gray-200 rounded-lg">'
           tableHtml += '<thead class="bg-gray-50"><tr>'
-          headerCells.forEach(header => {
+          filteredHeaders.forEach(header => {
             tableHtml += `<th class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b">${header}</th>`
           })
           tableHtml += '</tr></thead><tbody>'
           
-          dataRows.forEach((row, index) => {
+          filteredRows.forEach((row, index) => {
             tableHtml += `<tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">`
-            row.forEach(cell => {
-              tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">${cell}</td>`
+            row.forEach((cell, cellIndex) => {
+              const header = filteredHeaders[cellIndex]
+              
+              // Clean player names in Attacking Player column
+              if (header && (header.toLowerCase().includes('attacking player') || header.toLowerCase().includes('player'))) {
+                cell = cleanPlayerName(cell)
+              }
+              
+              // Handle video links - replace with Watch Video button
+              // Check for markdown links [Watch Video](url) or direct URLs
+              const markdownLinkMatch = cell.match(/\[Watch Video\]\((https?:\/\/[^\)]+)\)/)
+              const directUrlMatch = cell.match(/https?:\/\/[^\s\)]+/)
+              
+              if (markdownLinkMatch || (directUrlMatch && (cell.includes('.mp4') || cell.includes('video') || cell.includes('vod.')))) {
+                // Extract video URL from markdown link or direct URL
+                let videoUrl = markdownLinkMatch ? markdownLinkMatch[1] : directUrlMatch[0]
+                
+                // Clean the video URL (handle double encoding)
+                videoUrl = cleanVideoUrl(videoUrl)
+                const buttonId = `video-btn-${Date.now()}-${index}-${cellIndex}`
+                tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">
+                  <button 
+                    id="${buttonId}"
+                    class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
+                    onclick="window.handleVideoClick && window.handleVideoClick('${videoUrl}', '${row[0] || ''}', '${row[1] || ''}', '${row[2] || ''}', '${header || ''}')"
+                  >
+                    🎥 Watch Video
+                  </button>
+                </td>`
+              } else {
+                tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">${cell}</td>`
+              }
             })
             tableHtml += '</tr>'
           })
@@ -733,15 +1085,16 @@ export default function ChatPage() {
       formattedText = formattedText.replace(/^\* (.*$)/gim, '<li class="ml-4">$1</li>')
       formattedText = formattedText.replace(/(<li.*<\/li>)/s, '<ul class="list-disc pl-4 my-2">$1</ul>')
       
-      // Handle line breaks
-      formattedText = formattedText.replace(/\n/g, '<br>')
+      // Handle line breaks for non-table content
+      // Skip line break replacement to avoid breaking HTML structure
+      // formattedText = formattedText.replace(/\n(?![^<]*>)/g, '<br>')
       
       return formattedText
     }
 
     return (
       <div 
-        className="prose prose-sm max-w-none"
+        className="prose prose-sm max-w-none whitespace-pre-wrap"
         dangerouslySetInnerHTML={{ __html: formatContent(content) }}
       />
     )
@@ -1462,7 +1815,7 @@ export default function ChatPage() {
               <h3 className="text-base font-semibold text-gray-900">Select your team</h3>
               <Button variant="ghost" size="sm" onClick={() => setIsTeamModalOpen(false)} className="text-gray-500"><X className="w-4 h-4" /></Button>
             </div>
-            <p className="text-sm text-gray-600 mb-3">We’ll tailor suggested questions to your team.</p>
+            <p className="text-sm text-gray-600 mb-3">We'll tailor suggested questions to your team.</p>
             <div className="space-y-2 mb-4">
               {/* Simple preset list; adjust as needed */}
                                       {['Bengaluru Bulls', 'Telugu Titans', 'Puneri Paltan', 'Haryana Steelers', 'U Mumba', 'Jaipur Pink Panthers'].map((team) => (
@@ -1477,6 +1830,47 @@ export default function ChatPage() {
             <div className="flex items-center space-x-2">
               <Input placeholder="Or type your team name" value={selectedTeam} onChange={(e) => setSelectedTeam(e.target.value)} />
               <Button onClick={() => { localStorage.setItem('kabaddi_selected_team', selectedTeam || ''); setIsTeamModalOpen(false); }}>Save</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Simple Video Player Modal with iframe */}
+      {videoPlayerOpen && selectedVideoData && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {selectedVideoData.player} - {selectedVideoData.description}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Team: {selectedVideoData.team} | Raid: {selectedVideoData.raid_no}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setVideoPlayerOpen(false)
+                  setSelectedVideoData(null)
+                }}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="p-4">
+              <iframe
+                src={selectedVideoData.video_url}
+                width="100%"
+                height="400"
+                frameBorder="0"
+                allowFullScreen
+                className="rounded-lg"
+                title={`${selectedVideoData.player} - ${selectedVideoData.description}`}
+              />
             </div>
           </div>
         </div>
