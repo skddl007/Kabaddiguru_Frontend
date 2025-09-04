@@ -49,6 +49,60 @@ import { useRouter } from "next/navigation"
 
 import { sendMessage as sendMessageApi, generateSummary as generateSummaryApi, submitFeedback as submitFeedbackApi } from "@/lib/api-client"
 
+// Team logo mapping with actual image paths
+const TEAM_LOGOS = {
+  'Bengaluru Bulls': '/team-logos/Bengaluru Bulls.png',
+  'Telugu Titans': '/team-logos/Telugu Titans.jpeg',
+  'Puneri Paltan': '/team-logos/Puneri Paltan.jpeg',
+  'Haryana Steelers': '/team-logos/Haryana Steelers.jpeg',
+  'U Mumba': '/team-logos/U Mumba.png',
+  'Jaipur Pink Panthers': '/team-logos/Jaipur Pink Panthers.png',
+  'Bengal Warriors': '/team-logos/Bengal Warriors.png',
+  'Dabang Delhi': '/team-logos/Dabang Delhi.jpeg',
+  'Gujarat Giants': '/team-logos/Gujarat Giants.jpeg',
+  'Patna Pirates': '/team-logos/Patna Pirates.jpeg',
+  'Tamil Thalaivas': '/team-logos/Tamil Thalaivas.png',
+  'U.P. Yoddhas': '/team-logos/U.P. Yoddhas.jpeg'
+}
+
+// TeamLogo component for consistent team logo display
+const TeamLogo = ({ teamName, size = 'md', showFallback = true, className = '' }) => {
+  const sizeClasses = {
+    sm: 'w-6 h-6',
+    md: 'w-8 h-8',
+    lg: 'w-10 h-10',
+    xl: 'w-12 h-12'
+  }
+  
+  const logoPath = TEAM_LOGOS[teamName]
+  
+  if (logoPath) {
+    return (
+      <img 
+        src={logoPath} 
+        alt={`${teamName} logo`}
+        className={`${sizeClasses[size]} object-cover rounded-full shadow-lg border border-white/20 hover:scale-105 transition-transform duration-200 ${className}`}
+        onError={(e) => {
+          if (showFallback) {
+            e.target.style.display = 'none'
+            e.target.nextSibling.style.display = 'flex'
+          }
+        }}
+      />
+    )
+  }
+  
+  if (showFallback) {
+    return (
+      <div className={`${sizeClasses[size]} bg-gradient-to-r from-gray-500 to-gray-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg border border-white/20 ${className}`}>
+        {teamName?.charAt(0) || '?'}
+      </div>
+    )
+  }
+  
+  return null
+}
+
 export default function ChatPage() {
   const router = useRouter()
   const { 
@@ -843,26 +897,22 @@ export default function ChatPage() {
                     <p className="text-sm text-gray-500 hidden sm:block mt-1">Ask questions about your Kabaddi data</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Link href="/analytics">
-                    <Button
-                      size="sm"
-                      className="text-xs bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg"
-                    >
-                      <BarChart3 className="w-3 h-3 mr-1" />
-                      Analytics Tool
-                    </Button>
-                  </Link>
+                <div className="flex items-center space-x-1 sm:space-x-2">
                   {currentChatId && messages.length > 1 && (
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={handleGenerateSummary}
-                                        disabled={isGeneratingSummary || isLimitReached || summaryCount >= maxSummaries}
-                  className={`text-xs ${isLimitReached || summaryCount >= maxSummaries ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={isGeneratingSummary || isLimitReached || summaryCount >= maxSummaries}
+                      className={`text-xs ${isLimitReached || summaryCount >= maxSummaries ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                      <File className="w-3 h-3 mr-1" />
-                      {isGeneratingSummary ? "Generating..." : `Summary (${summaryCount}/${maxSummaries})`}
+                      <File className="w-3 h-3 sm:mr-1" />
+                      <span className="hidden sm:inline">
+                        {isGeneratingSummary ? "Generating..." : `Summary (${summaryCount}/${maxSummaries})`}
+                      </span>
+                      <span className="sm:hidden">
+                        {isGeneratingSummary ? "..." : `${summaryCount}/${maxSummaries}`}
+                      </span>
                     </Button>
                   )}
                   <Badge 
@@ -878,15 +928,15 @@ export default function ChatPage() {
                     {connectionStatus === "online" ? (
                       <>
                         <Wifi className="w-3 h-3" />
-                        <span>Online</span>
+                        <span className="hidden sm:inline">Online</span>
                       </>
                     ) : connectionStatus === "offline" ? (
                       <>
                         <WifiOff className="w-3 h-3" />
-                        <span>Offline</span>
+                        <span className="hidden sm:inline">Offline</span>
                       </>
                     ) : (
-                      <span>Connecting...</span>
+                      <span className="hidden sm:inline">Connecting...</span>
                     )}
                   </Badge>
                 </div>
@@ -897,10 +947,23 @@ export default function ChatPage() {
           <div className="max-w-6xl mx-auto space-y-4">
             {/* Team Selector Banner */}
             <div className="flex items-center justify-between bg-white border rounded-md p-3">
-              <div className="text-sm text-gray-700">
-                Team context: <span className="font-medium">{selectedTeam || 'Not set'}</span>
+              <div className="text-sm text-gray-700 flex-1 min-w-0">
+                <span className="hidden sm:inline">Team context: </span>
+                <span className="sm:hidden">Team: </span>
+                <div className="flex items-center gap-2 mt-1 sm:mt-0 sm:inline-flex">
+                  {selectedTeam && <TeamLogo teamName={selectedTeam} size="sm" />}
+                  <span className="font-medium truncate">{selectedTeam || 'Not set'}</span>
+                </div>
               </div>
-              <Button variant="outline" size="sm" onClick={() => setIsTeamModalOpen(true)} className="text-xs">{selectedTeam ? 'Change team' : 'Select team'}</Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setIsTeamModalOpen(true)} 
+                className="text-xs flex-shrink-0 ml-2"
+              >
+                <span className="hidden sm:inline">{selectedTeam ? 'Change team' : 'Select team'}</span>
+                <span className="sm:hidden">{selectedTeam ? 'Change' : 'Select'}</span>
+              </Button>
             </div>
             {messages.map((message) => (
               <div
@@ -1220,7 +1283,29 @@ export default function ChatPage() {
                     </div>
                   )}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                {/* Mobile: Show only 1 suggestion with horizontal scroll */}
+                <div className="block md:hidden">
+                  <div className="overflow-x-auto pb-2">
+                    <div className="flex space-x-2 min-w-max">
+                      {suggestions.slice(0, 6).map((suggestion, index) => (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setInput(suggestion)}
+                          className="text-xs h-auto p-2 text-left justify-start bg-white hover:bg-blue-50 border-blue-200 hover:border-blue-300 whitespace-nowrap flex-shrink-0 min-w-[200px]"
+                          disabled={isLoading}
+                        >
+                          <div className="truncate">
+                            {suggestion.length > 40 ? suggestion.slice(0, 40) + "..." : suggestion}
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                {/* Desktop: Show grid layout */}
+                <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-2">
                   {suggestions.slice(0, 6).map((suggestion, index) => (
                     <Button
                       key={index}
@@ -1269,7 +1354,42 @@ export default function ChatPage() {
                   <MessageSquare className="w-4 h-4 mr-2 text-orange-600" />
                   Quick Start Questions
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                {/* Mobile: Show only 1 suggestion with horizontal scroll */}
+                <div className="block md:hidden">
+                  <div className="overflow-x-auto pb-2">
+                    <div className="flex space-x-2 min-w-max">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setInput("Show me top performing raiders this season")}
+                        className="text-xs h-auto p-2 text-left justify-start bg-white hover:bg-orange-50 border-orange-200 hover:border-orange-300 whitespace-nowrap flex-shrink-0 min-w-[150px]"
+                        disabled={isLoading}
+                      >
+                        Top Raiders
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setInput("Analyze team defensive strategies")}
+                        className="text-xs h-auto p-2 text-left justify-start bg-white hover:bg-orange-50 border-orange-200 hover:border-orange-300 whitespace-nowrap flex-shrink-0 min-w-[150px]"
+                        disabled={isLoading}
+                      >
+                        Defense Analysis
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setInput("Compare match performance trends")}
+                        className="text-xs h-auto p-2 text-left justify-start bg-white hover:bg-orange-50 border-orange-200 hover:border-orange-300 whitespace-nowrap flex-shrink-0 min-w-[150px]"
+                        disabled={isLoading}
+                      >
+                        Match Trends
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                {/* Desktop: Show grid layout */}
+                <div className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-2">
                   <Button
                     variant="outline"
                     size="sm"
@@ -1345,11 +1465,14 @@ export default function ChatPage() {
             <p className="text-sm text-gray-600 mb-3">We’ll tailor suggested questions to your team.</p>
             <div className="space-y-2 mb-4">
               {/* Simple preset list; adjust as needed */}
-              {['Bengaluru Bulls', 'Telugu Titans', 'Puneri Paltan', 'Haryana Steelers', 'U Mumba', 'Jaipur Pink Panthers'].map((team) => (
-                <Button key={team} variant={selectedTeam === team ? 'default' : 'outline'} size="sm" className="w-full justify-start" onClick={() => setSelectedTeam(team)}>
-                  {team}
-                </Button>
-              ))}
+                                      {['Bengaluru Bulls', 'Telugu Titans', 'Puneri Paltan', 'Haryana Steelers', 'U Mumba', 'Jaipur Pink Panthers'].map((team) => (
+                          <Button key={team} variant={selectedTeam === team ? 'default' : 'outline'} size="sm" className="w-full justify-start" onClick={() => setSelectedTeam(team)}>
+                            <div className="flex items-center gap-2">
+                              <TeamLogo teamName={team} size="sm" />
+                              <span>{team}</span>
+                            </div>
+                          </Button>
+                        ))}
             </div>
             <div className="flex items-center space-x-2">
               <Input placeholder="Or type your team name" value={selectedTeam} onChange={(e) => setSelectedTeam(e.target.value)} />

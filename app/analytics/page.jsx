@@ -35,6 +35,60 @@ const TEAM_NAMES = {
   'UP': 'U.P. Yoddhas'
 }
 
+// Team logo mapping with actual image paths
+const TEAM_LOGOS = {
+  'TT': '/team-logos/Telugu Titans.jpeg',
+  'BB': '/team-logos/Bengaluru Bulls.png',
+  'BW': '/team-logos/Bengal Warriors.png',
+  'DD': '/team-logos/Dabang Delhi.jpeg',
+  'GG': '/team-logos/Gujarat Giants.jpeg',
+  'HS': '/team-logos/Haryana Steelers.jpeg',
+  'JP': '/team-logos/Jaipur Pink Panthers.png',
+  'PP': '/team-logos/Patna Pirates.jpeg',
+  'PU': '/team-logos/Puneri Paltan.jpeg',
+  'TN': '/team-logos/Tamil Thalaivas.png',
+  'UM': '/team-logos/U Mumba.png',
+  'UP': '/team-logos/U.P. Yoddhas.jpeg'
+}
+
+// TeamLogo component for consistent team logo display
+const TeamLogo = ({ teamCode, size = 'md', showFallback = true, className = '' }) => {
+  const sizeClasses = {
+    sm: 'w-8 h-8',
+    md: 'w-10 h-10',
+    lg: 'w-12 h-12',
+    xl: 'w-16 h-16'
+  }
+  
+  const logoPath = TEAM_LOGOS[teamCode]
+  
+  if (logoPath) {
+    return (
+      <img 
+        src={logoPath} 
+        alt={`${teamCode} logo`}
+        className={`${sizeClasses[size]} object-cover rounded-full shadow-lg border-2 border-white/20 hover:scale-105 transition-transform duration-200 ${className}`}
+        onError={(e) => {
+          if (showFallback) {
+            e.target.style.display = 'none'
+            e.target.nextSibling.style.display = 'flex'
+          }
+        }}
+      />
+    )
+  }
+  
+  if (showFallback) {
+    return (
+      <div className={`${sizeClasses[size]} bg-gradient-to-r from-gray-500 to-gray-600 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg border-2 border-white/20 ${className}`}>
+        {teamCode}
+      </div>
+    )
+  }
+  
+  return null
+}
+
 export default function AnalyticsPage() {
   const [activeTab, setActiveTab] = useState("match")
   const [isLoading, setIsLoading] = useState(false)
@@ -412,12 +466,22 @@ export default function AnalyticsPage() {
                       <Label htmlFor="team1">Team A</Label>
                       <Select value={selectedTeam1} onValueChange={handleTeam1Change}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select Team A" />
+                          <SelectValue placeholder="Select Team A">
+                            {selectedTeam1 && (
+                              <div className="flex items-center gap-2">
+                                <TeamLogo teamCode={selectedTeam1} size="sm" />
+                                <span>{TEAM_NAMES[selectedTeam1] || selectedTeam1}</span>
+                              </div>
+                            )}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {teams.map((team) => (
                             <SelectItem key={team} value={team}>
-                              {TEAM_NAMES[team] || team}
+                              <div className="flex items-center gap-2">
+                                <TeamLogo teamCode={team} size="sm" />
+                                <span>{TEAM_NAMES[team] || team}</span>
+                              </div>
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -428,12 +492,22 @@ export default function AnalyticsPage() {
                       <Label htmlFor="team2">Team B</Label>
                       <Select value={selectedTeam2} onValueChange={handleTeam2Change}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select Team B" />
+                          <SelectValue placeholder="Select Team B">
+                            {selectedTeam2 && (
+                              <div className="flex items-center gap-2">
+                                <TeamLogo teamCode={selectedTeam2} size="sm" />
+                                <span>{TEAM_NAMES[selectedTeam2] || selectedTeam2}</span>
+                              </div>
+                            )}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {teams.map((team) => (
                             <SelectItem key={team} value={team}>
-                              {TEAM_NAMES[team] || team}
+                              <div className="flex items-center gap-2">
+                                <TeamLogo teamCode={team} size="sm" />
+                                <span>{TEAM_NAMES[team] || team}</span>
+                              </div>
                             </SelectItem>
                           ))}
                         </SelectContent>

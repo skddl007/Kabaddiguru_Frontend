@@ -6,6 +6,60 @@ import { Button } from "@/components/ui/button"
 import { Loader2, X, Play, Pause, Volume2, VolumeX, Maximize2, RotateCcw, AlertCircle } from 'lucide-react'
 import { toast } from "@/hooks/use-toast"
 
+// Team logo mapping with actual image paths
+const TEAM_LOGOS = {
+  'TT': '/team-logos/Telugu Titans.jpeg',
+  'BB': '/team-logos/Bengaluru Bulls.png',
+  'BW': '/team-logos/Bengal Warriors.png',
+  'DD': '/team-logos/Dabang Delhi.jpeg',
+  'GG': '/team-logos/Gujarat Giants.jpeg',
+  'HS': '/team-logos/Haryana Steelers.jpeg',
+  'JP': '/team-logos/Jaipur Pink Panthers.png',
+  'PP': '/team-logos/Patna Pirates.jpeg',
+  'PU': '/team-logos/Puneri Paltan.jpeg',
+  'TN': '/team-logos/Tamil Thalaivas.png',
+  'UM': '/team-logos/U Mumba.png',
+  'UP': '/team-logos/U.P. Yoddhas.jpeg'
+}
+
+// TeamLogo component for consistent team logo display
+const TeamLogo = ({ teamCode, size = 'md', showFallback = true, className = '' }) => {
+  const sizeClasses = {
+    sm: 'w-6 h-6',
+    md: 'w-8 h-8',
+    lg: 'w-10 h-10',
+    xl: 'w-12 h-12'
+  }
+  
+  const logoPath = TEAM_LOGOS[teamCode]
+  
+  if (logoPath) {
+    return (
+      <img 
+        src={logoPath} 
+        alt={`${teamCode} logo`}
+        className={`${sizeClasses[size]} object-cover rounded-full shadow-lg border border-white/20 hover:scale-105 transition-transform duration-200 ${className}`}
+        onError={(e) => {
+          if (showFallback) {
+            e.target.style.display = 'none'
+            e.target.nextSibling.style.display = 'flex'
+          }
+        }}
+      />
+    )
+  }
+  
+  if (showFallback) {
+    return (
+      <div className={`${sizeClasses[size]} bg-gradient-to-r from-gray-500 to-gray-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg border border-white/20 ${className}`}>
+        {teamCode}
+      </div>
+    )
+  }
+  
+  return null
+}
+
 export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
   const [videoUrl, setVideoUrl] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -298,8 +352,11 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
                  <span className="ml-2 font-medium">{cleanPlayerName(raidData.player || raidData.Attacking_Player_Name)}</span>
                </div>
               <div>
-                <span className="text-gray-600">Team:</span>
-                <span className="ml-2 font-medium">{raidData.team || raidData.Attacking_Team_Code || 'Unknown'}</span>
+                                        <span className="text-gray-600">Team:</span>
+                        <div className="ml-2 flex items-center gap-2">
+                          <TeamLogo teamCode={raidData.team || raidData.Attacking_Team_Code} size="sm" />
+                          <span className="font-medium">{raidData.team || raidData.Attacking_Team_Code || 'Unknown'}</span>
+                        </div>
               </div>
               <div>
                 <span className="text-gray-600">Raid Number:</span>

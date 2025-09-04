@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect, useMemo, useState } from "react"
+import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { X, User, LogOut } from 'lucide-react'
 import Link from "next/link"
@@ -7,19 +9,46 @@ import { useUser } from "@/contexts/UserContext"
 
 export default function MobileMenu({ isOpen, onClose, onAuthModalOpen, currentPage }) {
   const { user, logout, isAuthenticated } = useUser()
-  
-  if (!isOpen) return null
+  const [mounted, setMounted] = useState(false)
+  const portalEl = useMemo(() => {
+    if (typeof document === 'undefined') return null
+    const el = document.createElement('div')
+    el.setAttribute('data-mobile-menu-portal', 'true')
+    return el
+  }, [])
 
-  return (
-    <div className="fixed inset-0 z-50 md:hidden">
+  useEffect(() => {
+    setMounted(true)
+    if (!portalEl) return
+    document.body.appendChild(portalEl)
+    return () => {
+      try { document.body.removeChild(portalEl) } catch {}
+    }
+  }, [portalEl])
+
+  // Lock background scroll when menu is open
+  useEffect(() => {
+    if (!mounted) return
+    if (isOpen) {
+      document.body.classList.add('overflow-hidden')
+    } else {
+      document.body.classList.remove('overflow-hidden')
+    }
+    return () => document.body.classList.remove('overflow-hidden')
+  }, [isOpen, mounted])
+  
+  if (!isOpen || !mounted || !portalEl) return null
+
+  const content = (
+    <div className="fixed inset-0 z-[9999] md:hidden">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-gradient-to-br from-orange-50/90 via-red-50/90 to-yellow-50/90 backdrop-blur-sm"
+        className="absolute inset-0 z-[10000] bg-gradient-to-br from-orange-50/90 via-red-50/90 to-yellow-50/90 backdrop-blur-sm"
         onClick={onClose}
       />
       
       {/* Menu */}
-      <div className="absolute top-0 right-0 w-64 h-full bg-white shadow-2xl transform transition-transform duration-300 ease-in-out">
+      <div className="absolute top-0 right-0 z-[10001] w-64 h-full bg-white shadow-2xl transform transition-transform duration-300 ease-in-out">
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b">
@@ -51,6 +80,18 @@ export default function MobileMenu({ isOpen, onClose, onAuthModalOpen, currentPa
                 }`}
               >
                 Analytics Tool
+              </Button>
+            </Link>
+            <Link href="/matches" onClick={onClose}>
+              <Button 
+                variant="ghost" 
+                className={`w-full justify-start text-left ${
+                  currentPage === 'matches' 
+                    ? 'bg-blue-100 text-blue-700 hover:bg-blue-200 font-medium' 
+                    : ''
+                }`}
+              >
+                Matches
               </Button>
             </Link>
             <Link href="/dashboard" onClick={onClose}>
@@ -134,4 +175,6 @@ export default function MobileMenu({ isOpen, onClose, onAuthModalOpen, currentPa
       </div>
     </div>
   )
+
+  return createPortal(content, portalEl)
 }
