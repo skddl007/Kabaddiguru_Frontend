@@ -307,4 +307,8 @@ For support and questions:
 
 ---
 
+<<<<<<< HEAD
 **KabaddiGuru Frontend** - Intelligent Sports Analytics Platform
+=======
+**KabaddiGuru Frontend** - Intelligent Sports Analytics Platform
+>>>>>>> df939ad749387eb563a1865f623b8139bfd0b297
