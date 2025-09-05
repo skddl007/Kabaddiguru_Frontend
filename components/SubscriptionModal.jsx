@@ -1,78 +1,12 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { Check, Crown, Zap, Shield, Users, X } from "lucide-react"
+import { Check, Crown, Shield, X, Mail, MessageCircle } from "lucide-react"
 
 export default function SubscriptionModal({ isOpen, onClose }) {
-  const [selectedPlan, setSelectedPlan] = useState("pro")
-  const [loading, setLoading] = useState(false)
-
-  const plans = [
-    {
-      id: "basic",
-      name: "Basic",
-      price: "$9.99",
-      period: "month",
-      features: [
-        "100 chat requests per month",
-        "Basic analytics",
-        "Email support",
-        "Standard response time"
-      ],
-      popular: false
-    },
-    {
-      id: "pro",
-      name: "Pro",
-      price: "$19.99",
-      period: "month",
-      features: [
-        "Unlimited chat requests",
-        "Advanced analytics",
-        "Priority support",
-        "Faster response time",
-        "Custom insights",
-        "Team collaboration"
-      ],
-      popular: true
-    },
-    {
-      id: "enterprise",
-      name: "Enterprise",
-      price: "$49.99",
-      period: "month",
-      features: [
-        "Everything in Pro",
-        "Custom integrations",
-        "Dedicated support",
-        "API access",
-        "White-label options",
-        "Advanced security"
-      ],
-      popular: false
-    }
-  ]
-
-  const handleSubscribe = async () => {
-    setLoading(true)
-    try {
-      // Here you would integrate with your payment processor
-      // For now, we'll just simulate a successful subscription
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // Close modal and show success message
-      onClose()
-      // You can add a toast notification here
-    } catch (error) {
-      console.error("Subscription error:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -94,64 +28,60 @@ export default function SubscriptionModal({ isOpen, onClose }) {
             )}
           </div>
           <DialogDescription className="text-center">
-            You&apos;ve reached your free chat limit. Upgrade to continue enjoying unlimited access to KabaddiGuru.
+            You&apos;ve reached your free usage limit. Contact us to discuss upgrade options and continue enjoying unlimited access to KabaddiGuru.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid md:grid-cols-3 gap-6 mt-6">
-          {plans.map((plan) => (
-            <Card 
-              key={plan.id}
-              className={`relative cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                selectedPlan === plan.id 
-                  ? 'ring-2 ring-orange-500 border-orange-200' 
-                  : 'border-gray-200'
-              }`}
-              onClick={() => setSelectedPlan(plan.id)}
-            >
-              {plan.popular && (
-                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500 to-red-500">
-                  <Crown className="w-3 h-3 mr-1" />
-                  Most Popular
-                </Badge>
-              )}
+        {/* Upgrade Information Card */}
+        <div className="mt-6">
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-50 to-red-50">
+            <CardContent className="p-8 text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Crown className="w-8 h-8 text-white" />
+              </div>
               
-              <CardHeader className="text-center pb-4">
-                <CardTitle className="text-xl font-bold">{plan.name}</CardTitle>
-                <div className="mt-2">
-                  <span className="text-3xl font-bold text-gray-900">{plan.price}</span>
-                  <span className="text-gray-500">/{plan.period}</span>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                Ready to Upgrade?
+              </h3>
+              
+              <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+                Unlock unlimited access to all KabaddiGuru features including unlimited chat requests, 
+                unlimited filter attempts, advanced analytics, and premium support.
+              </p>
+
+              <div className="grid md:grid-cols-2 gap-6 mb-8">
+                <div className="text-left">
+                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                    <Check className="w-5 h-5 text-green-500 mr-2" />
+                    Premium Features
+                  </h4>
+                  <ul className="space-y-2 text-sm text-gray-600">
+                    <li>• Unlimited chat requests</li>
+                    <li>• Unlimited filter attempts</li>
+                    <li>• Advanced player analytics</li>
+                    <li>• Match analysis tools</li>
+                    <li>• Priority support</li>
+                    <li>• Custom insights</li>
+                  </ul>
                 </div>
-              </CardHeader>
-              
-              <CardContent className="pt-0">
-                <ul className="space-y-3">
-                  {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-start space-x-2">
-                      <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span className="text-sm text-gray-600">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
                 
-                <Button
-                  className={`w-full mt-6 ${
-                    selectedPlan === plan.id
-                      ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                  onClick={handleSubscribe}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    "Processing..."
-                  ) : (
-                    selectedPlan === plan.id ? "Subscribe Now" : "Select Plan"
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+                <div className="text-left">
+                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                    <Shield className="w-5 h-5 text-blue-500 mr-2" />
+                    Enterprise Options
+                  </h4>
+                  <ul className="space-y-2 text-sm text-gray-600">
+                    <li>• Custom integrations</li>
+                    <li>• Dedicated support</li>
+                    <li>• API access</li>
+                    <li>• White-label options</li>
+                    <li>• Advanced security</li>
+                    <li>• Custom dashboards</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="mt-6 p-4 bg-gray-50 rounded-lg">
@@ -163,6 +93,52 @@ export default function SubscriptionModal({ isOpen, onClose }) {
             All plans include secure payment processing, 30-day money-back guarantee, 
             and the ability to cancel anytime. No long-term commitments required.
           </p>
+        </div>
+
+        {/* Subscription Discussion Contact */}
+        <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <MessageCircle className="w-6 h-6 text-white" />
+            </div>
+            
+            <h3 className="text-xl font-bold text-blue-900 mb-3">
+              Ready to Upgrade? Let's Discuss!
+            </h3>
+            
+            <p className="text-blue-800 mb-6 max-w-2xl mx-auto">
+              Contact us to discuss your upgrade options and find the perfect plan for your needs. 
+              We offer flexible pricing and custom solutions for individuals and teams.
+            </p>
+
+            <div className="bg-white rounded-lg p-4 mb-4 border border-blue-200">
+              <div className="flex items-center justify-center space-x-3">
+                <Mail className="w-5 h-5 text-blue-600" />
+                <span className="text-blue-900 font-medium">Contact us at:</span>
+                <a 
+                  href="mailto:srikanthv40@gmail.com?subject=KabaddiGuru Subscription Inquiry"
+                  className="text-lg text-blue-600 hover:text-blue-800 underline font-semibold"
+                >
+                  srikanthv40@gmail.com
+                </a>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-4 text-sm text-blue-700">
+              <div className="flex items-center justify-center space-x-2">
+                <Check className="w-4 h-4 text-green-500" />
+                <span>24-hour response</span>
+              </div>
+              <div className="flex items-center justify-center space-x-2">
+                <Check className="w-4 h-4 text-green-500" />
+                <span>Custom pricing</span>
+              </div>
+              <div className="flex items-center justify-center space-x-2">
+                <Check className="w-4 h-4 text-green-500" />
+                <span>Flexible plans</span>
+              </div>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

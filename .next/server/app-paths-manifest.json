@@ -1,3 +1,11 @@
 {
-  "/page": "app/page.js"
+  "/api/analytics/players/search/route": "app/api/analytics/players/search/route.js",
+  "/api/analytics/players/opponents/route": "app/api/analytics/players/opponents/route.js",
+  "/api/analytics/players/skills/categorized/route": "app/api/analytics/players/skills/categorized/route.js",
+  "/api/dashboard/filter-limit/route": "app/api/dashboard/filter-limit/route.js",
+  "/api/analytics/players/filter/route": "app/api/analytics/players/filter/route.js",
+  "/page": "app/page.js",
+  "/analytics/page": "app/analytics/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/players/page": "app/players/page.js"
 }

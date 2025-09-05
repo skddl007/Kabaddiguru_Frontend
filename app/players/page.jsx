@@ -8,19 +8,22 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Search, Swords, Loader2, X, AlertCircle, Play, BarChart3, Menu, X as XIcon, LogOut, Users } from 'lucide-react'
+import { Search, Swords, Loader2, X, AlertCircle, Play, BarChart3, Menu, X as XIcon, LogOut, Users, Shield } from 'lucide-react'
 import Link from "next/link"
 import AuthWrapper from "@/components/AuthWrapper"
 import { useUser } from "@/contexts/UserContext"
 import { toast } from "@/hooks/use-toast"
 import MobileMenu from "@/components/MobileMenu"
 import PlayersSummaryCards from "@/components/PlayersSummaryCards"
+import SubscriptionModal from "@/components/SubscriptionModal"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 export default function PlayersPage() {
-  const { user, logout, isAuthenticated } = useUser()
+  const { user, logout, isAuthenticated, token } = useUser()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [filterLimitInfo, setFilterLimitInfo] = useState(null)
 
   // Simple filters
   const [playerSearch, setPlayerSearch] = useState("")
@@ -82,6 +85,36 @@ export default function PlayersPage() {
     const code = raw.toUpperCase()
     return TEAM_NAME_MAP[code] || raw
   }
+
+  // Check filter limit for players page
+  const checkFilterLimit = async () => {
+    if (!token) return
+    
+    try {
+      const response = await fetch(`/api/dashboard/filter-limit`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setFilterLimitInfo(data)
+        
+        // Show upgrade modal if limit reached and user is not premium/admin
+        if (!data.can_filter && !data.is_admin) {
+          setShowUpgradeModal(true)
+        }
+      }
+    } catch (error) {
+      console.error('Error checking filter limit:', error)
+    }
+  }
+
+  // Load filter limit on component mount
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      checkFilterLimit()
+    }
+  }, [isAuthenticated, token])
 
   // Suggest players
   useEffect(() => {
@@ -172,6 +205,18 @@ export default function PlayersPage() {
       toast({ title: 'Select player(s)', description: 'Please select at least one player.' })
       return
     }
+
+    // Check filter limit for free users
+    if (filterLimitInfo && !filterLimitInfo.can_filter && !filterLimitInfo.is_admin) {
+      toast({ 
+        title: 'Filter Limit Reached', 
+        description: `You've used ${filterLimitInfo.filter_count} of ${filterLimitInfo.max_filters} filter attempts. Upgrade to continue.`,
+        variant: 'destructive' 
+      })
+      setShowUpgradeModal(true)
+      return
+    }
+
     setIsLoading(true)
     setItems([])
     try {
@@ -189,7 +234,12 @@ export default function PlayersPage() {
         })
       })
       const data = await res.json()
-      if (data?.success) { setItems(data.items || []); setFilterItems(data.items || []) }
+      if (data?.success) { 
+        setItems(data.items || [])
+        setFilterItems(data.items || [])
+        // Refresh filter limit after successful search
+        checkFilterLimit()
+      }
       else toast({ title: 'Failed', description: data?.error || 'Could not fetch results', variant: 'destructive' })
     } catch (e) {
       console.error(e)
@@ -357,6 +407,44 @@ export default function PlayersPage() {
         </nav>
 
         <div className="max-w-7xl mx-auto px-4 py-8">
+          {/* Filter Limit Banner */}
+          {filterLimitInfo && !filterLimitInfo.can_filter && !filterLimitInfo.is_admin && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+              <div className="flex items-center gap-2 text-red-600">
+                <AlertCircle className="h-5 w-5" />
+                <span className="font-medium text-sm">Players Filter Limit Reached</span>
+              </div>
+              <p className="text-red-600 text-sm mt-2">
+                You&apos;ve used {filterLimitInfo.filter_count} of {filterLimitInfo.max_filters} filter attempts. 
+                Upgrade to premium for unlimited player filtering.
+              </p>
+              <Button 
+                onClick={() => setShowUpgradeModal(true)}
+                className="mt-3 bg-red-600 hover:bg-red-700 text-white h-8 px-4 text-sm"
+                size="sm"
+              >
+                Upgrade Now
+              </Button>
+            </div>
+          )}
+
+          {/* Premium User Banner */}
+          {filterLimitInfo && filterLimitInfo.is_admin && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-green-600">
+                  <Users className="h-5 w-5" />
+                  <span className="font-medium text-sm">Premium Players Access</span>
+                </div>
+                <Badge variant="outline" className="text-green-600 text-xs border-green-300">
+                  Unlimited Filters
+                </Badge>
+              </div>
+              <p className="text-green-600 text-sm mt-2">
+                You have unlimited player filtering access with your premium subscription.
+              </p>
+            </div>
+          )}
 
           <Card className="border-0 shadow-xl bg-white/90 backdrop-blur min-h-[280px]">
             <CardHeader className="py-3 border-b">
@@ -696,6 +784,12 @@ export default function PlayersPage() {
             </div>
           )}
         </div>
+
+        {/* Subscription Modal */}
+        <SubscriptionModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+        />
       </div>
     </AuthWrapper>
   )
