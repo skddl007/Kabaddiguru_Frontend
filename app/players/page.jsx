@@ -109,6 +109,25 @@ export default function PlayersPage() {
     }
   }
 
+  // Increment filter count after using filters
+  const incrementFilterCount = async () => {
+    if (!token) return
+    
+    try {
+      const response = await fetch(`/api/dashboard/filter-limit/increment`, {
+        method: 'POST',
+        headers: { "Authorization": `Bearer ${token}` }
+      })
+      
+      if (response.ok) {
+        // Refresh filter limit info after incrementing
+        checkFilterLimit()
+      }
+    } catch (error) {
+      console.error('Error incrementing filter count:', error)
+    }
+  }
+
   // Load filter limit on component mount
   useEffect(() => {
     if (isAuthenticated && token) {
@@ -237,8 +256,8 @@ export default function PlayersPage() {
       if (data?.success) { 
         setItems(data.items || [])
         setFilterItems(data.items || [])
-        // Refresh filter limit after successful search
-        checkFilterLimit()
+        // Increment filter count and refresh filter limit after successful search
+        incrementFilterCount()
       }
       else toast({ title: 'Failed', description: data?.error || 'Could not fetch results', variant: 'destructive' })
     } catch (e) {
