@@ -14,6 +14,7 @@ import ChatLimitBanner from "@/components/ChatLimitBanner"
 import { useUser } from "@/contexts/UserContext"
 import MobileMenu from "@/components/MobileMenu"
 import SubscriptionModal from "@/components/SubscriptionModal"
+import { toast } from "@/hooks/use-toast"
 // Removed VideoPlayer import - using simple iframe approach
 
 
@@ -91,7 +92,6 @@ const TeamLogo = ({ teamCode, size = 'md', showFallback = true, className = '' }
 export default function DashboardPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
-  const [dashboardData] = useState(null)
   const [error, setError] = useState(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
@@ -110,7 +110,17 @@ export default function DashboardPage() {
 
 
 
+
   const { user, logout, isAuthenticated, token } = useUser()
+
+
+  const getFullTeamName = (team) => {
+    if (!team) return team
+    const raw = String(team).trim()
+    if (raw.includes(' ')) return raw
+    const code = raw.toUpperCase()
+    return TEAM_NAMES[code] || raw
+  }
 
   const cleanPlayerName = (name) => {
     if (!name) return 'Unknown Player'
@@ -183,10 +193,11 @@ export default function DashboardPage() {
 
 
 
+
+
   // Load initial data
   useEffect(() => {
     if (isAuthenticated && token) {
-      // loadInitialData() // Commented out filter options loading
       checkFilterLimit()
     }
     // Always load main overview regardless of auth (overview endpoints are public)
@@ -426,6 +437,7 @@ export default function DashboardPage() {
           </div>
         )}
 
+
         {/* Main Dashboard Content */}
         <div className="max-w-7xl mx-auto">
           {error && (
@@ -440,7 +452,7 @@ export default function DashboardPage() {
           )}
 
           {/* Main Dashboard Overview */}
-          {!dashboardData && !error && !isLoading && (
+          {seasonOverview && !error && !isLoading && (
               <div className="space-y-8">
               {/* Header Section */}
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -470,7 +482,7 @@ export default function DashboardPage() {
                       onClick={() => router.push('/players')}
                     >
                       <Users className="w-4 h-4 mr-2" />
-                      Players
+                      Players Raid Analysis
                     </Button>
                   </div>
                   
@@ -775,151 +787,6 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Filtered Results (when filters are applied) */}
-          {dashboardData && (
-            <div className="space-y-6">
-              {/* Statistics Overview */}
-              <Card className="border-0 shadow-lg">
-                <CardHeader className="pb-4 border-b border-gray-100">
-                  <CardTitle className="flex items-center gap-3 text-xl">
-                    <TrendingUp className="h-6 w-6 text-blue-600" />
-                    Filtered Results Statistics
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    <div className="text-center p-4 bg-blue-50 rounded-xl">
-                      <div className="text-2xl font-bold text-blue-600">{dashboardData.statistics?.totalRaids || 0}</div>
-                      <div className="text-sm text-gray-600">Total Raids</div>
-                    </div>
-                    <div className="text-center p-4 bg-green-50 rounded-xl">
-                      <div className="text-2xl font-bold text-green-600">{dashboardData.statistics?.successfulRaids || 0}</div>
-                      <div className="text-sm text-gray-600">Successful Raids</div>
-                    </div>
-                    <div className="text-center p-4 bg-purple-50 rounded-xl">
-                      <div className="text-2xl font-bold text-purple-600">{dashboardData.statistics?.totalPoints || 0}</div>
-                      <div className="text-sm text-gray-600">Total Points</div>
-                    </div>
-                    <div className="text-center p-4 bg-orange-50 rounded-xl">
-                      <div className="text-2xl font-bold text-orange-600">{dashboardData.statistics?.uniquePlayers || 0}</div>
-                      <div className="text-sm text-gray-600">Unique Players</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Raids Data */}
-              <Card className="border-0 shadow-lg">
-                <CardHeader className="pb-4 border-b border-gray-100">
-                  <CardTitle className="flex items-center gap-3 text-xl">
-                    <Play className="h-6 w-6 text-green-600" />
-                    Raids Data ({dashboardData.raids?.length || 0} raids)
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {dashboardData.raids && dashboardData.raids.length > 0 ? (
-                      dashboardData.raids.map((raid, index) => (
-                        <Card key={index} className="border border-gray-200 hover:shadow-lg transition-shadow">
-                          <div className="p-4">
-                            {/* Header with Status and Period */}
-                            <div className="flex items-center justify-between mb-3">
-                              <Badge variant="outline" className="text-xs border-gray-300">
-                                {raid.Game_Half_Period || 'Unknown Period'}
-                              </Badge>
-                              <Badge 
-                                variant={raid.Attack_Result_Status === 'Successful' ? 'default' : 'secondary'}
-                                className={`px-2 py-1 text-xs ${
-                                  raid.Attack_Result_Status === 'Successful' 
-                                    ? 'bg-green-100 text-green-800 border-green-200' 
-                                    : 'bg-red-100 text-red-800 border-red-200'
-                                }`}
-                              >
-                                {raid.Attack_Result_Status || 'Unknown Status'}
-                              </Badge>
-                            </div>
-
-                            {/* Players and Teams */}
-                            <div className="space-y-3 mb-4">
-                              <div className="flex items-center justify-between text-xs">
-                                <div className="flex-1 text-center">
-                                  <div className="flex flex-col items-center gap-1">
-                                    <TeamLogo teamCode={raid.Attacking_Team_Code} size="sm" />
-                                    <div className="font-semibold text-gray-900 truncate" title={cleanPlayerName(raid.Attacking_Player_Name)}>
-                                      {cleanPlayerName(raid.Attacking_Player_Name)}
-                                    </div>
-                                    <div className="text-gray-500 truncate">
-                                      {TEAM_NAMES[raid.Attacking_Team_Code] || raid.Attacking_Team_Code || 'Unknown Team'}
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="mx-2 text-gray-400 text-xs">VS</div>
-                                <div className="flex-1 text-center">
-                                  <div className="flex flex-col items-center gap-1">
-                                    <TeamLogo teamCode={raid.Defending_Team_Code} size="sm" />
-                                    <div className="font-semibold text-gray-900 truncate" title={cleanPlayerName(raid.Primary_Defender_Name)}>
-                                      {cleanPlayerName(raid.Primary_Defender_Name)}
-                                    </div>
-                                    <div className="text-gray-500 truncate">
-                                      {TEAM_NAMES[raid.Defending_Team_Code] || raid.Defending_Team_Code || 'Unknown Team'}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Points */}
-                            <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                              <div className="flex justify-between items-center text-xs">
-                                <div className="text-center flex-1">
-                                  <div className="font-bold text-gray-900">{raid.Points_Scored_By_Attacker || 0}</div>
-                                  <div className="text-gray-600">Attacker</div>
-                                </div>
-                                <div className="text-gray-400">-</div>
-                                <div className="text-center flex-1">
-                                  <div className="font-bold text-gray-900">{raid.Points_Scored_By_Defenders || 0}</div>
-                                  <div className="text-gray-600">Defenders</div>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Watch Button */}
-                            <div className="flex justify-center">
-                              <Button 
-                                className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 hover:from-purple-700 hover:via-pink-700 hover:to-red-700 text-white py-2 px-4 text-sm w-full font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 border-0"
-                                size="sm"
-                                onClick={() => handleWatchVideo(raid)}
-                              >
-                                <div className="flex items-center justify-center gap-2">
-                                  <div className="relative">
-                                    <Play className="h-4 w-4" />
-                                    <div className="absolute inset-0 bg-white/20 rounded-full animate-ping"></div>
-                                  </div>
-                                  <span>Watch Video</span>
-                                </div>
-                              </Button>
-                            </div>
-                          </div>
-                        </Card>
-                      ))
-                    ) : (
-                      <div className="col-span-full text-center py-8">
-                        <div className="max-w-md mx-auto">
-                          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <Play className="h-6 w-6 text-gray-400" />
-                          </div>
-                          <h3 className="text-base font-medium text-gray-900 mb-1">No raids found</h3>
-                          <p className="text-gray-500 text-sm">
-                            No raids found matching your current filters. Try adjusting your search criteria.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
 
           {isLoading && (
             <Card className="border-0 shadow-lg">
