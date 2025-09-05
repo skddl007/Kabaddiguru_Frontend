@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Loader2, X, Play, Pause, Volume2, VolumeX, Maximize2, RotateCcw, AlertCircle, Gauge } from 'lucide-react'
@@ -74,11 +74,69 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
   const videoRef = useRef(null)
   const playPromiseRef = useRef(null)
 
+  const loadVideoUrl = useCallback(async () => {
+    // If raidData has video_url directly (analytics), use it
+    if (raidData?.video_url && raidData.video_url !== "Video not available") {
+      // Clean and validate the video URL
+      let cleanUrl = raidData.video_url.trim()
+      if (cleanUrl.startsWith("'") && cleanUrl.endsWith("'")) {
+        cleanUrl = cleanUrl.slice(1, -1) // Remove surrounding quotes
+      }
+      
+             // Handle double URL encoding only if needed
+       try {
+         // Check if URL is double-encoded (contains %25)
+         if (cleanUrl.includes('%25')) {
+           console.log('Detected double-encoded URL, decoding twice')
+           cleanUrl = decodeURIComponent(decodeURIComponent(cleanUrl))
+         }
+         // Don't decode or re-encode URLs that are already properly formatted
+         // The database already contains correctly encoded URLs
+       } catch (e) {
+         console.warn('URL parsing failed, using original:', cleanUrl)
+       }
+      
+      console.log('Cleaned video URL:', cleanUrl)
+      setVideoUrl(cleanUrl)
+      return
+    }
+
+    // Otherwise, fetch video URL using raid_id (dashboard)
+    if (!raidId) {
+      setError("No video available for this raid")
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+    
+    try {
+      const response = await fetch(`/api/video/url?raid_id=${raidId}`)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to load video')
+      }
+      
+      const data = await response.json()
+      setVideoUrl(data.url)
+    } catch (err) {
+      setError(err.message)
+      toast({
+        title: "Error",
+        description: err.message,
+        variant: "destructive"
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }, [raidId, raidData])
+
   useEffect(() => {
     if (isOpen && (raidId || raidData?.video_url)) {
       loadVideoUrl()
     }
-  }, [isOpen, raidId, raidData])
+  }, [isOpen, loadVideoUrl])
 
   // Reset video state when video URL changes
   useEffect(() => {
@@ -202,63 +260,6 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
     }
   }, [])
 
-  const loadVideoUrl = async () => {
-    // If raidData has video_url directly (analytics), use it
-    if (raidData?.video_url && raidData.video_url !== "Video not available") {
-      // Clean and validate the video URL
-      let cleanUrl = raidData.video_url.trim()
-      if (cleanUrl.startsWith("'") && cleanUrl.endsWith("'")) {
-        cleanUrl = cleanUrl.slice(1, -1) // Remove surrounding quotes
-      }
-      
-             // Handle double URL encoding only if needed
-       try {
-         // Check if URL is double-encoded (contains %25)
-         if (cleanUrl.includes('%25')) {
-           console.log('Detected double-encoded URL, decoding twice')
-           cleanUrl = decodeURIComponent(decodeURIComponent(cleanUrl))
-         }
-         // Don't decode or re-encode URLs that are already properly formatted
-         // The database already contains correctly encoded URLs
-       } catch (e) {
-         console.warn('URL parsing failed, using original:', cleanUrl)
-       }
-      
-      console.log('Cleaned video URL:', cleanUrl)
-      setVideoUrl(cleanUrl)
-      return
-    }
-
-    // Otherwise, fetch video URL using raid_id (dashboard)
-    if (!raidId) {
-      setError("No video available for this raid")
-      return
-    }
-
-    setIsLoading(true)
-    setError(null)
-    
-    try {
-      const response = await fetch(`/api/video/url?raid_id=${raidId}`)
-      
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to load video')
-      }
-      
-      const data = await response.json()
-      setVideoUrl(data.url)
-    } catch (err) {
-      setError(err.message)
-      toast({
-        title: "Error",
-        description: err.message,
-        variant: "destructive"
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const handleVideoLoad = (event) => {
     const video = event.target

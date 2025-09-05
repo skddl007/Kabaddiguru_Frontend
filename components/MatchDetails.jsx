@@ -1,16 +1,15 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Play, Search, Calendar, MapPin, Users, Trophy, ArrowLeft, Filter, Eye, Clock, Target } from 'lucide-react'
+import { Play, Search, Calendar, MapPin, Users, Trophy, ArrowLeft, Filter, Eye, Target } from 'lucide-react'
 import { toast } from "@/hooks/use-toast"
 import VideoPlayer from "@/components/VideoPlayer"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 // Team logo mapping - using uppercase codes consistently
 const TEAM_LOGOS = {
@@ -71,7 +70,7 @@ export const TeamLogo = ({ teamCode, size = 'md', className = '' }) => {
   )
 }
 
-export default function MatchDetails({ filters, onBack, isAuthenticated, token }) {
+export default function MatchDetails({ filters, onBack }) {
   const [matches, setMatches] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -80,14 +79,7 @@ export default function MatchDetails({ filters, onBack, isAuthenticated, token }
   const [videoPlayerOpen, setVideoPlayerOpen] = useState(false)
   const [selectedMatch, setSelectedMatch] = useState(null)
 
-  // Load matches when filters change
-  useEffect(() => {
-    if (filters && filters.tournament && filters.season && filters.team) {
-      loadMatches()
-    }
-  }, [filters])
-
-  const loadMatches = async () => {
+  const loadMatches = useCallback(async () => {
     setIsLoading(true)
     setError(null)
     
@@ -124,7 +116,15 @@ export default function MatchDetails({ filters, onBack, isAuthenticated, token }
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [filters, token])
+
+  // Load matches when filters change
+  useEffect(() => {
+    if (filters && filters.tournament && filters.season && filters.team) {
+      loadMatches()
+    }
+  }, [loadMatches])
+
 
   const handleWatchVideo = (match) => {
     setSelectedMatch(match)

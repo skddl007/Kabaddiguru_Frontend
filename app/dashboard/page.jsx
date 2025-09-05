@@ -5,23 +5,18 @@ import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BarChart3, Users, Search, Loader2, AlertCircle, CheckCircle, ArrowLeft, TrendingUp, Target, Award, Menu, X, LogOut, Filter, Play, Shield, Zap, ChevronDown, ChevronUp, X as XIcon, Calendar, Trophy, Users2, TrendingDown } from 'lucide-react'
-import { toast } from "@/hooks/use-toast"
+import { BarChart3, Users, Search, Loader2, AlertCircle, Menu, X, LogOut, Play, Shield, Zap, Calendar, Trophy, Users2, TrendingUp, Target } from 'lucide-react'
 import Link from "next/link"
 import AuthWrapper from "@/components/AuthWrapper"
 import ChatLimitBanner from "@/components/ChatLimitBanner"
 import { useUser } from "@/contexts/UserContext"
 import MobileMenu from "@/components/MobileMenu"
 import SubscriptionModal from "@/components/SubscriptionModal"
-import VideoPlayer from "@/components/VideoPlayer"
+// Removed VideoPlayer import - using simple iframe approach
 
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 // Team code to full name mapping
 const TEAM_NAMES = {
@@ -96,13 +91,15 @@ const TeamLogo = ({ teamCode, size = 'md', showFallback = true, className = '' }
 export default function DashboardPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
-  const [dashboardData, setDashboardData] = useState(null)
+  const [dashboardData] = useState(null)
   const [error, setError] = useState(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [filterLimitInfo, setFilterLimitInfo] = useState(null)
   const [videoPlayerOpen, setVideoPlayerOpen] = useState(false)
-  const [selectedRaid, setSelectedRaid] = useState(null)
+  const [selectedVideoData, setSelectedVideoData] = useState(null)
+  const [videoUrl, setVideoUrl] = useState(null)
+  const [isLoadingVideo, setIsLoadingVideo] = useState(false)
 
   // Main overview data
   const [seasonOverview, setSeasonOverview] = useState(null)
@@ -123,9 +120,65 @@ export default function DashboardPage() {
     return parts[0] || 'Unknown Player'
   }
 
+  // Helper function to clean video URLs (handle double encoding only)
+  const cleanVideoUrl = (url) => {
+    if (!url) return url
+    
+    // Remove surrounding quotes if present
+    let cleanUrl = url.trim()
+    if (cleanUrl.startsWith("'") && cleanUrl.endsWith("'")) {
+      cleanUrl = cleanUrl.slice(1, -1)
+    }
+    
+    // Only handle double URL encoding, don't decode already correct URLs
+    if (cleanUrl.includes('%25')) {
+      console.log('Detected double-encoded URL, decoding twice')
+      cleanUrl = decodeURIComponent(decodeURIComponent(cleanUrl))
+    }
+    // Don't decode URLs that are already properly encoded from database
+    
+    return cleanUrl
+  }
+
+  const loadVideoUrl = async (raidId) => {
+    if (!raidId) {
+      setVideoUrl(null)
+      return
+    }
+
+    setIsLoadingVideo(true)
+    setVideoUrl(null)
+    
+    try {
+      const response = await fetch(`/api/video/url?raid_id=${raidId}`)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to load video')
+      }
+      
+      const data = await response.json()
+      setVideoUrl(cleanVideoUrl(data.url))
+    } catch (err) {
+      console.error('Error loading video URL:', err)
+      setVideoUrl(null)
+    } finally {
+      setIsLoadingVideo(false)
+    }
+  }
+
   const handleWatchVideo = (raid) => {
-    setSelectedRaid(raid)
+    // For dashboard, we need to fetch the video URL using the raid ID
+    // The video URL will be fetched via the API endpoint
+    setSelectedVideoData({
+      raid_id: raid.Unique_Raid_Identifier,
+      player: cleanPlayerName(raid.Attacking_Player_Name),
+      team: raid.Attacking_Team_Code,
+      raid_no: raid.Unique_Raid_Identifier,
+      description: 'Raid Video'
+    })
     setVideoPlayerOpen(true)
+    loadVideoUrl(raid.Unique_Raid_Identifier)
   }
 
 
@@ -138,7 +191,7 @@ export default function DashboardPage() {
     }
     // Always load main overview regardless of auth (overview endpoints are public)
     loadMainOverview(selectedSeason)
-  }, [isAuthenticated, token])
+  }, [isAuthenticated, token, selectedSeason])
 
   useEffect(() => {
     // Reload overview when season changes
@@ -167,7 +220,7 @@ export default function DashboardPage() {
     }
   }
 
-  const loadMainOverview = async (season) => {
+  const loadMainOverview = async () => {
     setIsLoading(true)
     setError(null)
     try {
@@ -320,7 +373,7 @@ export default function DashboardPage() {
           <MobileMenu 
             isOpen={isMobileMenuOpen} 
             onClose={() => setIsMobileMenuOpen(false)}
-            onAuthModalOpen={(mode) => {
+            onAuthModalOpen={() => {
               // Handle auth modal if needed
             }}
             currentPage="dashboard"
@@ -342,7 +395,7 @@ export default function DashboardPage() {
               <span className="font-medium text-sm">Dashboard Filtering Limit Reached</span>
             </div>
             <p className="text-red-600 text-sm mt-2">
-              You've used {filterLimitInfo.filter_count} of {filterLimitInfo.max_filters} filter attempts. 
+              You&apos;ve used {filterLimitInfo.filter_count} of {filterLimitInfo.max_filters} filter attempts. 
               Upgrade to premium for unlimited dashboard filtering.
             </p>
             <Button 
@@ -890,14 +943,63 @@ export default function DashboardPage() {
         onClose={() => setShowUpgradeModal(false)}
       />
 
-      {/* Video Player Modal */}
-      <VideoPlayer
-        isOpen={videoPlayerOpen}
-        onClose={() => setVideoPlayerOpen(false)}
-        raidId={selectedRaid?.Unique_Raid_Identifier}
-        raidData={selectedRaid}
-      />
+      {/* Simple Video Player Modal with iframe */}
+      {videoPlayerOpen && selectedVideoData && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {selectedVideoData.player} - {selectedVideoData.description}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Team: {selectedVideoData.team} | Raid: {selectedVideoData.raid_no}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setVideoPlayerOpen(false)
+                  setSelectedVideoData(null)
+                  setVideoUrl(null)
+                }}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="p-4">
+              {isLoadingVideo ? (
+                <div className="flex items-center justify-center h-64">
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                  <span className="ml-2 text-gray-600">Loading video...</span>
+                </div>
+              ) : videoUrl ? (
+                <iframe
+                  src={videoUrl}
+                  width="100%"
+                  height="400"
+                  frameBorder="0"
+                  allowFullScreen
+                  className="rounded-lg"
+                  title={`${selectedVideoData.player} - ${selectedVideoData.description}`}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-center text-gray-600">
+                    <AlertCircle className="h-8 w-8 mx-auto mb-2" />
+                    <p className="text-sm">Video not available</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
     </AuthWrapper>
   )
 }
+ 

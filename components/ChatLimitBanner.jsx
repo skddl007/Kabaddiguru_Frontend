@@ -1,8 +1,6 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import { Crown, AlertTriangle, Info } from "lucide-react"
 import { useUser } from "@/contexts/UserContext"
 
@@ -11,9 +9,6 @@ export default function ChatLimitBanner({ variant = "default" }) {
     chatLimitInfo, 
     isLimitReached, 
     isAdmin, 
-    showSubscriptionModal, 
-    setShowSubscriptionModal,
-    refreshChatLimit 
   } = useUser()
 
   // Don't show banner for admin users
@@ -26,11 +21,10 @@ export default function ChatLimitBanner({ variant = "default" }) {
     return null
   }
 
-  const { remaining_chats = 0, max_chats = 0, subscription_type } = chatLimitInfo
+  const { remaining_chats = 0, max_chats = 0 } = chatLimitInfo
   const safeMax = Number.isFinite(max_chats) && max_chats > 0 ? max_chats : 0
   const safeRemaining = Number.isFinite(remaining_chats) && remaining_chats >= 0 ? remaining_chats : 0
   const usedChats = safeMax > 0 ? Math.max(0, safeMax - safeRemaining) : 0
-  const progressPercentage = safeMax > 0 ? (usedChats / safeMax) * 100 : 0
 
   // Do not show banner unless the free trial limit has been reached
   if (!isLimitReached) {

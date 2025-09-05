@@ -3,32 +3,18 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { 
   Send, 
   Plus, 
   MessageSquare, 
   BarChart3, 
-  Download, 
-  Copy, 
   ThumbsUp, 
   ThumbsDown, 
-  FileText,
-  Loader2,
-  AlertCircle,
-  CheckCircle,
   ChevronDown,
   ChevronUp,
-  RefreshCw,
-  Sparkles,
-  Users,
-  Calendar,
-  TrendingUp,
-  Target,
-  Award,
   X,
   Bot,
   User,
@@ -45,7 +31,6 @@ import Link from "next/link"
 import AuthWrapper from "@/components/AuthWrapper"
 import ChatLimitBanner from "@/components/ChatLimitBanner"
 import { useUser } from "@/contexts/UserContext"
-import { useRouter } from "next/navigation"
 
 import { sendMessage as sendMessageApi, generateSummary as generateSummaryApi, submitFeedback as submitFeedbackApi } from "@/lib/api-client"
 // Removed VideoPlayer import - using simple iframe approach
@@ -105,14 +90,12 @@ const TeamLogo = ({ teamName, size = 'md', showFallback = true, className = '' }
 }
 
 export default function ChatPage() {
-  const router = useRouter()
   const { 
     user, 
     token, 
     canChat, 
     isLimitReached, 
     isAdmin, 
-    showSubscriptionModal, 
     setShowSubscriptionModal,
     refreshChatLimit 
   } = useUser()
@@ -131,7 +114,7 @@ export default function ChatPage() {
   const [suggestions, setSuggestions] = useState([])
   const [suggestionsLoading, setSuggestionsLoading] = useState(false)
   const [suggestionsLoaded, setSuggestionsLoaded] = useState(false)
-  const [connectionStatus, setConnectionStatus] = useState("connected")
+  const [connectionStatus] = useState("connected")
   const [debounceTimer, setDebounceTimer] = useState(null)
   const [summaryData, setSummaryData] = useState(null)
   const [showSummary, setShowSummary] = useState(false)
@@ -198,7 +181,7 @@ export default function ChatPage() {
   }
 
   // Helper function to handle video button clicks - now using simple iframe
-  const handleVideoClick = (videoUrl, playerName, teamCode, raidNo, description) => {
+  const handleVideoClick = useCallback((videoUrl, playerName, teamCode, raidNo, description) => {
     setSelectedVideoData({
       video_url: cleanVideoUrl(videoUrl),
       player: cleanPlayerName(playerName),
@@ -207,7 +190,7 @@ export default function ChatPage() {
       description: description || 'Raid Video'
     })
     setVideoPlayerOpen(true)
-  }
+  }, [])
 
   // Chat limits are managed globally in UserContext; no need to fetch here
 
@@ -221,8 +204,8 @@ export default function ChatPage() {
   }, [])
 
   // Helpers for per-user and per-chat storage keys
-  const getUserScopedKey = (base) => user?.user_id ? `${base}_${user.user_id}` : base
-  const getMessagesKey = (chatId) => chatId ? `kabaddi_messages_${chatId}` : null
+  const getUserScopedKey = useCallback((base) => user?.user_id ? `${base}_${user.user_id}` : base, [user?.user_id])
+  const getMessagesKey = useCallback((chatId) => chatId ? `kabaddi_messages_${chatId}` : null, [])
 
   // Load chats and current chat when user changes
   useEffect(() => {
@@ -269,21 +252,21 @@ export default function ChatPage() {
       localStorage.removeItem(userCurrentKey)
       localStorage.removeItem(baseCurrentKey)
     } catch {}
-  }, [user])
+  }, [user, getUserScopedKey])
 
   // Save current chat id per user
   useEffect(() => {
     if (currentChatId) {
       localStorage.setItem(getUserScopedKey('kabaddi_current_chat_id'), currentChatId)
     }
-  }, [currentChatId, user])
+  }, [currentChatId, user, getUserScopedKey])
 
   useEffect(() => {
     const mk = getMessagesKey(currentChatId)
     if (mk) {
       localStorage.setItem(mk, JSON.stringify(messages))
     }
-  }, [messages, currentChatId])
+  }, [messages, currentChatId, getMessagesKey])
 
   // Load messages for current chat
   useEffect(() => {
@@ -305,31 +288,16 @@ export default function ChatPage() {
         }
       }
     }
-  }, [currentChatId])
+  }, [currentChatId, getMessagesKey])
 
   // Save chats to localStorage
   useEffect(() => {
     if (chats.length > 0) {
       localStorage.setItem(getUserScopedKey('kabaddi_chats'), JSON.stringify(chats))
     }
-  }, [chats, user])
+  }, [chats, user, getUserScopedKey])
 
-  // Load suggestions
-  useEffect(() => {
-    if (!suggestionsLoaded && !suggestionsLoading) {
-      loadSuggestions()
-    }
-  }, [suggestionsLoaded, suggestionsLoading])
-
-  // Set up global window function for video clicks
-  useEffect(() => {
-    window.handleVideoClick = handleVideoClick
-    return () => {
-      delete window.handleVideoClick
-    }
-  }, [])
-
-  const loadSuggestions = async () => {
+  const loadSuggestions = useCallback(async () => {
     setSuggestionsLoading(true)
     try {
       const response = await fetch(`/api/suggestions`)
@@ -343,7 +311,23 @@ export default function ChatPage() {
       setSuggestionsLoading(false)
       setSuggestionsLoaded(true)
     }
-  }
+  }, [])
+
+  // Load suggestions
+  useEffect(() => {
+    if (!suggestionsLoaded && !suggestionsLoading) {
+      loadSuggestions()
+    }
+  }, [suggestionsLoaded, suggestionsLoading, loadSuggestions])
+
+  // Set up global window function for video clicks
+  useEffect(() => {
+    window.handleVideoClick = handleVideoClick
+    return () => {
+      delete window.handleVideoClick
+    }
+  }, [handleVideoClick])
+
 
   const sendMessage = async (message, chatId, authToken) => {
     return await sendMessageApi(message, chatId, authToken)
@@ -449,9 +433,7 @@ export default function ChatPage() {
 
     try {
       // Call the real backend API - no timeout to allow for long processing
-      const startTime = Date.now();
       const response = await sendMessage(currentInput, usedChatId, token)
-      const endTime = Date.now();
       
       // Remove loading message and add real response
       setMessages(prev => prev.filter(msg => !msg.isLoading))
@@ -498,7 +480,7 @@ export default function ChatPage() {
       const errorMessage = {
         id: Date.now().toString(),
         content: error.message === "Free trial limit reached. Please upgrade to premium for unlimited chats." 
-          ? "You've reached your free trial limit. Please upgrade to premium to continue chatting."
+          ? "You&apos;ve reached your free trial limit. Please upgrade to premium to continue chatting."
           : "Sorry, I encountered an error processing your request. Please try again.",
         role: "assistant",
         timestamp: new Date(),
@@ -520,7 +502,7 @@ export default function ChatPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [input, isLoading, currentChatId, messages.length, connectionStatus, debounceTimer, canChat, isAdmin, token, refreshChatLimit])
+  }, [input, isLoading, currentChatId, messages.length, connectionStatus, debounceTimer, canChat, isAdmin, token, refreshChatLimit, setShowSubscriptionModal, getUserScopedKey, getMessagesKey])
 
   const startNewChat = () => {
     setMessages([{
@@ -1247,7 +1229,6 @@ export default function ChatPage() {
                         </span>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-500 hidden sm:block mt-1">Ask questions about your Kabaddi data</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-1 sm:space-x-2">
@@ -1687,7 +1668,7 @@ export default function ChatPage() {
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-yellow-900">Summary Limit Reached</h3>
-                      <p className="text-xs text-yellow-700">You've used all {maxSummaries} summary generations. Upgrade to premium for unlimited summaries.</p>
+                      <p className="text-xs text-yellow-700">You&apos;ve used all {maxSummaries} summary generations. Upgrade to premium for unlimited summaries.</p>
                     </div>
                   </div>
                   <Button
@@ -1815,7 +1796,7 @@ export default function ChatPage() {
               <h3 className="text-base font-semibold text-gray-900">Select your team</h3>
               <Button variant="ghost" size="sm" onClick={() => setIsTeamModalOpen(false)} className="text-gray-500"><X className="w-4 h-4" /></Button>
             </div>
-            <p className="text-sm text-gray-600 mb-3">We'll tailor suggested questions to your team.</p>
+            <p className="text-sm text-gray-600 mb-3">We&apos;ll tailor suggested questions to your team.</p>
             <div className="space-y-2 mb-4">
               {/* Simple preset list; adjust as needed */}
                                       {['Bengaluru Bulls', 'Telugu Titans', 'Puneri Paltan', 'Haryana Steelers', 'U Mumba', 'Jaipur Pink Panthers'].map((team) => (

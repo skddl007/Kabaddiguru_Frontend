@@ -1,9 +1,8 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Bot, Users, Target, Zap, Shield, Globe, Award, TrendingUp, BarChart3, Brain, Database } from 'lucide-react'
+import { Card, CardContent } from "@/components/ui/card"
+import { ArrowLeft, Bot, Users, Target, Zap, Shield, Globe, TrendingUp, BarChart3, Brain, Database } from 'lucide-react'
 import Link from "next/link"
 import MobileMenu from "@/components/MobileMenu"
 import AuthWrapper from "@/components/AuthWrapper"
@@ -192,7 +191,7 @@ export default function AboutPage() {
               </h1>
               
               <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-4xl mx-auto px-4 leading-relaxed">
-                We're passionate about bringing cutting-edge AI technology to the world of Kabaddi. Our platform transforms raw data into actionable insights, helping teams, players, and fans understand the game like never before.
+                We&apos;re passionate about bringing cutting-edge AI technology to the world of Kabaddi. Our platform transforms raw data into actionable insights, helping teams, players, and fans understand the game like never before.
               </p>
             </div>
 

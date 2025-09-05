@@ -104,7 +104,7 @@ export default function AuthWrapper({ children, requireAuth = true }) {
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Upgrade Required</h2>
             <p className="text-gray-600 mb-6">
-              You've reached your free trial limit. Upgrade to premium to continue using this feature.
+              You&apos;ve reached your free trial limit. Upgrade to premium to continue using this feature.
             </p>
           </div>
           <button

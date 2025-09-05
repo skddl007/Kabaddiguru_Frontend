@@ -1,20 +1,5 @@
 import { NextResponse } from 'next/server';
 
-// Team code mapping - keeping uppercase consistency
-const TEAM_CODE_MAPPING = {
-  'BB': 'BB',    // Bengaluru Bulls
-  'JP': 'JP',    // Jaipur Pink Panthers
-  'BW': 'BW',    // Bengal Warriors
-  'DD': 'DD',    // Dabang Delhi
-  'GG': 'GG',    // Gujarat Giants
-  'HS': 'HS',    // Haryana Steelers
-  'PP': 'PP',    // Patna Pirates
-  'PU': 'PU',    // Puneri Paltan
-  'TT': 'TT',    // Telugu Titans
-  'TN': 'TN',    // Tamil Thalaivas
-  'UM': 'UM',    // U Mumba
-  'UP': 'UP'     // U.P. Yoddhas
-};
 
 // Reverse mapping for frontend to database (now 1:1 mapping)
 const REVERSE_TEAM_MAPPING = {

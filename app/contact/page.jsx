@@ -265,7 +265,7 @@ export default function ContactPage() {
               </h1>
               
               <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-4xl mx-auto px-4 leading-relaxed">
-                Have questions about our platform? Need technical support? Want to discuss partnerships? We're here to help you succeed with KabaddiGuru.
+                Have questions about our platform? Need technical support? Want to discuss partnerships? We&apos;re here to help you succeed with KabaddiGuru.
               </p>
             </div>
 
@@ -284,7 +284,7 @@ export default function ContactPage() {
                     </div>
                   </CardTitle>
                   <CardDescription className="text-base sm:text-lg lg:text-xl text-gray-600 mt-3 leading-relaxed">
-                    Fill out the form below and we'll get back to you as soon as possible. 
+                    Fill out the form below and we&apos;ll get back to you as soon as possible. 
                     <span className="block text-sm text-orange-600 font-medium mt-1">
                       * All fields are required
                     </span>
@@ -416,7 +416,7 @@ export default function ContactPage() {
                     Get in Touch
                   </h2>
                   <p className="text-base sm:text-lg text-gray-600 leading-relaxed">
-                    We're here to help you get the most out of KabaddiGuru. Reach out to us through any of the channels below.
+                    We&apos;re here to help you get the most out of KabaddiGuru. Reach out to us through any of the channels below.
                   </p>
                 </div>
 

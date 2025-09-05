@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
@@ -123,7 +122,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = "signin" }) {
       } else {
         toast({ title: "Error", description: data.detail || "Failed to request reset.", variant: "destructive" })
       }
-    } catch (err) {
+    } catch (_) {
       toast({ title: "Error", description: "Failed to request reset.", variant: "destructive" })
     } finally {
       setLoading(false)
@@ -155,7 +154,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = "signin" }) {
       } else {
         toast({ title: "Error", description: data.detail || "Failed to reset password.", variant: "destructive" })
       }
-    } catch (err) {
+    } catch (_) {
       toast({ title: "Error", description: "Failed to reset password.", variant: "destructive" })
     } finally {
       setLoading(false)

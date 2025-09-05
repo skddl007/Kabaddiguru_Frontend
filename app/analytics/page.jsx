@@ -6,16 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BarChart3, Users, Search, Loader2, AlertCircle, CheckCircle, ArrowLeft, TrendingUp, Target, Award, Menu, X, LogOut } from 'lucide-react'
+import { BarChart3, Search, Loader2, AlertCircle, CheckCircle, Target, Award, Menu, X, LogOut } from 'lucide-react'
 import { toast } from "@/hooks/use-toast"
 import Link from "next/link"
 import AuthWrapper from "@/components/AuthWrapper"
 import ChatLimitBanner from "@/components/ChatLimitBanner"
 import { useUser } from "@/contexts/UserContext"
 import MobileMenu from "@/components/MobileMenu"
-import VideoPlayer from "@/components/VideoPlayer"
+// Removed VideoPlayer import - using simple iframe approach
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
@@ -96,7 +95,7 @@ export default function AnalyticsPage() {
   const [error, setError] = useState(null)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [videoPlayerOpen, setVideoPlayerOpen] = useState(false)
-  const [selectedVideo, setSelectedVideo] = useState(null)
+  const [selectedVideoData, setSelectedVideoData] = useState(null)
 
   const { user, logout, isAuthenticated } = useUser()
 
@@ -111,19 +110,33 @@ export default function AnalyticsPage() {
     return parts[0] || 'Unknown Player'
   }
 
-  const handleWatchVideo = (video) => {
-    // Extract raid_id from timestamp if available
-    let raidId = null
-    if (video.timestamp) {
-      const match = video.timestamp.match(/(\d+)s/)
-      if (match) {
-        raidId = parseInt(match[1])
-      }
+  // Helper function to clean video URLs (handle double encoding only)
+  const cleanVideoUrl = (url) => {
+    if (!url) return url
+    
+    // Remove surrounding quotes if present
+    let cleanUrl = url.trim()
+    if (cleanUrl.startsWith("'") && cleanUrl.endsWith("'")) {
+      cleanUrl = cleanUrl.slice(1, -1)
     }
     
-    setSelectedVideo({
-      ...video,
-      raid_id: raidId
+    // Only handle double URL encoding, don't decode already correct URLs
+    if (cleanUrl.includes('%25')) {
+      console.log('Detected double-encoded URL, decoding twice')
+      cleanUrl = decodeURIComponent(decodeURIComponent(cleanUrl))
+    }
+    // Don't decode URLs that are already properly encoded from database
+    
+    return cleanUrl
+  }
+
+  const handleWatchVideo = (video) => {
+    setSelectedVideoData({
+      video_url: cleanVideoUrl(video.video_url),
+      player: cleanPlayerName(video.player),
+      team: video.team,
+      raid_no: video.raid_no,
+      description: video.description || 'Raid Video'
     })
     setVideoPlayerOpen(true)
   }
@@ -136,7 +149,6 @@ export default function AnalyticsPage() {
   const [selectedMatch, setSelectedMatch] = useState("")
 
   // Player-wise summary state
-  const [players, setPlayers] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
   const [suggestedPlayers, setSuggestedPlayers] = useState([])
   const [selectedPlayer, setSelectedPlayer] = useState("")
@@ -430,7 +442,7 @@ export default function AnalyticsPage() {
           <MobileMenu 
             isOpen={isMobileMenuOpen} 
             onClose={() => setIsMobileMenuOpen(false)}
-            onAuthModalOpen={(mode) => {
+            onAuthModalOpen={() => {
               // Handle auth modal if needed
             }}
             currentPage="analytics"
@@ -1042,13 +1054,46 @@ export default function AnalyticsPage() {
       </div>
       </div>
 
-      {/* Video Player Modal */}
-      <VideoPlayer
-        isOpen={videoPlayerOpen}
-        onClose={() => setVideoPlayerOpen(false)}
-        raidId={selectedVideo?.raid_id}
-        raidData={selectedVideo}
-      />
+      {/* Simple Video Player Modal with iframe */}
+      {videoPlayerOpen && selectedVideoData && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {selectedVideoData.player} - {selectedVideoData.description}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Team: {selectedVideoData.team} | Raid: {selectedVideoData.raid_no}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setVideoPlayerOpen(false)
+                  setSelectedVideoData(null)
+                }}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="p-4">
+              <iframe
+                src={selectedVideoData.video_url}
+                width="100%"
+                height="400"
+                frameBorder="0"
+                allowFullScreen
+                className="rounded-lg"
+                title={`${selectedVideoData.player} - ${selectedVideoData.description}`}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
     </AuthWrapper>
   )

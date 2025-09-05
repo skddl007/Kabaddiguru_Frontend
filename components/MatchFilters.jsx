@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -22,7 +22,9 @@ import {
   Trophy,
   LogOut,
   Menu,
-  X
+  X,
+  Loader2,
+  AlertCircle
 } from 'lucide-react'
 
 // Team names mapping - using uppercase codes to match database
@@ -50,6 +52,10 @@ export default function MatchFilters({ user, logout, onBack }) {
   const [matches, setMatches] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState('date')
+  const [videoPlayerOpen, setVideoPlayerOpen] = useState(false)
+  const [selectedVideoData, setSelectedVideoData] = useState(null)
+  const [videoUrl, setVideoUrl] = useState(null)
+  const [isLoadingVideo, setIsLoadingVideo] = useState(false)
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -59,21 +65,7 @@ export default function MatchFilters({ user, logout, onBack }) {
     opponentTeam: 'all'
   })
 
-  // Load matches when filters change - only when both teams are selected
-  useEffect(() => {
-    if (filters.tournament && filters.season && filters.team && filters.opponentTeam && filters.opponentTeam !== 'all') {
-      loadMatches()
-    } else {
-      // Clear matches when not both teams are selected
-      setMatches([])
-    }
-  }, [filters.tournament, filters.season, filters.team, filters.opponentTeam])
-
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }))
-  }
-
-  const loadMatches = async () => {
+  const loadMatches = useCallback(async () => {
     if (!filters.tournament || !filters.season || !filters.team || !filters.opponentTeam || filters.opponentTeam === 'all') {
       toast({
         title: "Missing Filters",
@@ -140,11 +132,53 @@ export default function MatchFilters({ user, logout, onBack }) {
     } finally {
       setIsLoading(false)
     }
+  }, [filters.tournament, filters.season, filters.team, filters.opponentTeam, user?.token])
+
+  // Load matches when filters change - only when both teams are selected
+  useEffect(() => {
+    if (filters.tournament && filters.season && filters.team && filters.opponentTeam && filters.opponentTeam !== 'all') {
+      loadMatches()
+    } else {
+      // Clear matches when not both teams are selected
+      setMatches([])
+    }
+  }, [loadMatches])
+
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }))
+  }
+
+
+  // Helper function to clean video URLs (handle double encoding only)
+  const cleanVideoUrl = (url) => {
+    if (!url) return url
+    
+    // Remove surrounding quotes if present
+    let cleanUrl = url.trim()
+    if (cleanUrl.startsWith("'") && cleanUrl.endsWith("'")) {
+      cleanUrl = cleanUrl.slice(1, -1)
+    }
+    
+    // Only handle double URL encoding, don't decode already correct URLs
+    if (cleanUrl.includes('%25')) {
+      console.log('Detected double-encoded URL, decoding twice')
+      cleanUrl = decodeURIComponent(decodeURIComponent(cleanUrl))
+    }
+    // Don't decode URLs that are already properly encoded from database
+    
+    return cleanUrl
   }
 
   const handleWatchVideo = (match) => {
     if (match.videoUrl) {
-      window.open(match.videoUrl, '_blank')
+      setSelectedVideoData({
+        video_url: cleanVideoUrl(match.videoUrl),
+        player: 'Match Video',
+        team: `${match.teamACode} vs ${match.teamBCode}`,
+        raid_no: match.matchNumber,
+        description: 'Match Video'
+      })
+      setVideoPlayerOpen(true)
     } else {
       toast({
         title: "No Video Available",
@@ -633,6 +667,62 @@ export default function MatchFilters({ user, logout, onBack }) {
             </Card>
           )}
       </div>
+
+      {/* Simple Video Player Modal with iframe */}
+      {videoPlayerOpen && selectedVideoData && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {selectedVideoData.player} - {selectedVideoData.description}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Teams: {selectedVideoData.team}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setVideoPlayerOpen(false)
+                  setSelectedVideoData(null)
+                  setVideoUrl(null)
+                }}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="p-4">
+              {isLoadingVideo ? (
+                <div className="flex items-center justify-center h-64">
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                  <span className="ml-2 text-gray-600">Loading video...</span>
+                </div>
+              ) : selectedVideoData.video_url ? (
+                <iframe
+                  src={selectedVideoData.video_url}
+                  width="100%"
+                  height="400"
+                  frameBorder="0"
+                  allowFullScreen
+                  className="rounded-lg"
+                  title={`${selectedVideoData.player} - ${selectedVideoData.description}`}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-center text-gray-600">
+                    <AlertCircle className="h-8 w-8 mx-auto mb-2" />
+                    <p className="text-sm">Video not available</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

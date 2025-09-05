@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge"
 import { Filter, Search, Play, Trophy, Users, Calendar, Target, X } from 'lucide-react'
 import { toast } from "@/hooks/use-toast"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 // Tournament data - you can expand this based on your needs
 const TOURNAMENTS = [
@@ -41,7 +40,7 @@ const TEAMS = [
   { code: 'UP', name: 'U.P. Yoddhas' }
 ]
 
-export default function DashboardFilters({ onFiltersChange, onViewMatches, isAuthenticated, token }) {
+export default function DashboardFilters({ onFiltersChange, onViewMatches }) {
   const [filters, setFilters] = useState({
     tournament: '',
     season: '11',
@@ -93,7 +92,7 @@ export default function DashboardFilters({ onFiltersChange, onViewMatches, isAut
         title: "Filters Applied",
         description: "Loading matches with selected criteria...",
       })
-    } catch (error) {
+    } catch (_) {
       toast({
         title: "Error",
         description: "Failed to load matches. Please try again.",

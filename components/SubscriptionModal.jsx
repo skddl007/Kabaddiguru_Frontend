@@ -94,7 +94,7 @@ export default function SubscriptionModal({ isOpen, onClose }) {
             )}
           </div>
           <DialogDescription className="text-center">
-            You've reached your free chat limit. Upgrade to continue enjoying unlimited access to KabaddiGuru.
+            You&apos;ve reached your free chat limit. Upgrade to continue enjoying unlimited access to KabaddiGuru.
           </DialogDescription>
         </DialogHeader>
 
