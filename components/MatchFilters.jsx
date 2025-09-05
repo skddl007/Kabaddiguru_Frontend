@@ -161,7 +161,6 @@ export default function MatchFilters({ user, logout, onBack }) {
     
     // Only handle double URL encoding, don't decode already correct URLs
     if (cleanUrl.includes('%25')) {
-      console.log('Detected double-encoded URL, decoding twice')
       cleanUrl = decodeURIComponent(decodeURIComponent(cleanUrl))
     }
     // Don't decode URLs that are already properly encoded from database

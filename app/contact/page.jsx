@@ -173,6 +173,14 @@ export default function ContactPage() {
               
               {/* Desktop Navigation - Enhanced */}
               <div className="hidden md:flex items-center space-x-2 lg:space-x-4">
+                <Link href="/">
+                  <Button 
+                    variant="ghost" 
+                    className="hover:bg-orange-50 hover:text-orange-700 transition-colors duration-200 font-medium"
+                  >
+                    Home
+                  </Button>
+                </Link>
                 <Link href="/chat">
                   <Button 
                     variant="ghost" 

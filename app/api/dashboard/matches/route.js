@@ -25,7 +25,6 @@ export async function GET(request) {
     const opponentTeam = searchParams.get('opponent_team');
     const test = searchParams.get('test');
 
-    console.log('Frontend matches API called with params:', { season, team, opponentTeam, test });
 
     // Test endpoint
     if (test === 'true') {
@@ -60,8 +59,6 @@ export async function GET(request) {
       queryParams.append('opponent_team', dbOpponentTeam);
     }
 
-    console.log(`Attempting to call backend: ${backendUrl}/dashboard/matches?${queryParams}`);
-    console.log('Team mapping:', { team, dbTeam, opponentTeam, dbOpponentTeam });
     
     try {
       const backendResponse = await fetch(`${backendUrl}/dashboard/matches?${queryParams}`, {
@@ -73,7 +70,6 @@ export async function GET(request) {
         signal: AbortSignal.timeout(30000) // 30 second timeout
       });
 
-      console.log(`Backend response status: ${backendResponse.status}`);
 
       if (!backendResponse.ok) {
         const errorText = await backendResponse.text();
@@ -82,7 +78,6 @@ export async function GET(request) {
       }
 
       const backendData = await backendResponse.json();
-      console.log('Backend data received:', backendData);
       
       // Transform backend data to frontend format - keeping uppercase team codes
       const transformedMatches = (backendData.matches || []).map((match, index) => ({

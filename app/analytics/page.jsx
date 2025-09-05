@@ -122,7 +122,6 @@ export default function AnalyticsPage() {
     
     // Only handle double URL encoding, don't decode already correct URLs
     if (cleanUrl.includes('%25')) {
-      console.log('Detected double-encoded URL, decoding twice')
       cleanUrl = decodeURIComponent(decodeURIComponent(cleanUrl))
     }
     // Don't decode URLs that are already properly encoded from database
@@ -369,6 +368,9 @@ export default function AnalyticsPage() {
             
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-4">
+              <Link href="/">
+                <Button variant="ghost">Home</Button>
+              </Link>
               <Link href="/chat">
                 <Button variant="ghost">Chat</Button>
               </Link>

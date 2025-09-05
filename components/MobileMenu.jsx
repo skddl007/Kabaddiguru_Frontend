@@ -65,6 +65,11 @@ export default function MobileMenu({ isOpen, onClose, onAuthModalOpen, currentPa
           
           {/* Navigation Links */}
           <div className="flex-1 p-4 space-y-2">
+            <Link href="/" onClick={onClose}>
+              <Button variant="ghost" className="w-full justify-start text-left">
+                Home
+              </Button>
+            </Link>
             <Link href="/chat" onClick={onClose}>
               <Button variant="ghost" className="w-full justify-start text-left">
                 Chat

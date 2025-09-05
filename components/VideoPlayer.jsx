@@ -87,7 +87,6 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
        try {
          // Check if URL is double-encoded (contains %25)
          if (cleanUrl.includes('%25')) {
-           console.log('Detected double-encoded URL, decoding twice')
            cleanUrl = decodeURIComponent(decodeURIComponent(cleanUrl))
          }
          // Don't decode or re-encode URLs that are already properly formatted
@@ -96,7 +95,6 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
          console.warn('URL parsing failed, using original:', cleanUrl)
        }
       
-      console.log('Cleaned video URL:', cleanUrl)
       setVideoUrl(cleanUrl)
       return
     }
@@ -141,7 +139,6 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
   // Reset video state when video URL changes
   useEffect(() => {
     if (videoUrl) {
-      console.log('Video URL changed:', videoUrl)
       setIsPlaying(false)
       setCurrentTime(0)
       setDuration(0)
@@ -157,20 +154,6 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
     }
   }, [playbackSpeed])
 
-  // Debug video element state
-  useEffect(() => {
-    const video = videoRef.current
-    if (video && videoUrl) {
-      console.log('Video element state:', {
-        src: video.src,
-        readyState: video.readyState,
-        networkState: video.networkState,
-        paused: video.paused,
-        muted: video.muted,
-        volume: video.volume
-      })
-    }
-  }, [videoUrl])
 
   // Auto-play video when it's ready
   useEffect(() => {
@@ -178,21 +161,17 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
     if (video && videoUrl && !isLoading && !error) {
       const attemptAutoPlay = async () => {
         try {
-          console.log('Attempting to auto-play video')
           playPromiseRef.current = video.play()
           await playPromiseRef.current
           playPromiseRef.current = null
           setShowPlayOverlay(false)
-          console.log('Video auto-played successfully')
           return true
         } catch (playErr) {
           console.error('Auto-play failed:', playErr)
           playPromiseRef.current = null
           if (playErr.name === 'NotAllowedError') {
-            console.log('Auto-play blocked by browser, showing play overlay')
             setShowPlayOverlay(true)
           } else {
-            console.log('Auto-play failed for other reason, showing play overlay')
             setShowPlayOverlay(true)
           }
           return false
@@ -206,7 +185,6 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
             playPromiseRef.current = null
           }
           
-          console.log('Video is ready to play, attempting auto-play')
           
           // Try to play immediately when video is ready
           if (video && video.readyState >= 2) { // HAVE_CURRENT_DATA or higher
@@ -220,7 +198,6 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
               }, 1000)
             }
           } else {
-            console.log('Video not ready yet, showing play overlay')
             setShowPlayOverlay(true)
           }
         } catch (err) {
@@ -291,23 +268,19 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
           playPromiseRef.current = null
         }
         
-        console.log('Manual play button clicked')
         setShowPlayOverlay(false)
         
         // Ensure video is loaded and ready
         if (video.readyState < 2) {
-          console.log('Video not ready, loading first')
           setIsLoading(true)
           video.load()
           
           const handleCanPlay = async () => {
             try {
-              console.log('Video loaded, attempting to play')
               playPromiseRef.current = video.play()
               await playPromiseRef.current
               playPromiseRef.current = null
               setIsLoading(false)
-              console.log('Video started playing successfully')
             } catch (err) {
               console.error('Error playing video after load:', err)
               setIsLoading(false)
@@ -320,11 +293,9 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
         } else {
           // Video is ready, try to play immediately
           try {
-            console.log('Video ready, attempting to play')
             playPromiseRef.current = video.play()
             await playPromiseRef.current
             playPromiseRef.current = null
-            console.log('Video started playing successfully')
           } catch (err) {
             console.error('Error playing ready video:', err)
             if (err.name !== 'AbortError') {
@@ -514,31 +485,23 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
                   autoPlay
                   crossOrigin="anonymous"
                   src={videoUrl}
-                  onLoadedMetadata={(e) => {
-                    console.log('Video metadata loaded')
-                    handleVideoLoad(e)
-                  }}
+                  onLoadedMetadata={handleVideoLoad}
                   onTimeUpdate={handleTimeUpdate}
                   onPlay={() => {
-                    console.log('Video started playing')
                     setIsPlaying(true)
                     setShowPlayOverlay(false)
                     setIsLoading(false)
                   }}
                   onPause={() => {
-                    console.log('Video paused')
                     setIsPlaying(false)
                   }}
                   onEnded={() => {
-                    console.log('Video ended')
                     setIsPlaying(false)
                   }}
                   onWaiting={() => {
-                    console.log('Video waiting for data')
                     setIsLoading(true)
                   }}
                   onPlaying={() => {
-                    console.log('Video is playing')
                     setIsLoading(false)
                   }}
                   onError={(e) => {
@@ -569,19 +532,15 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
                     setError(errorMessage)
                   }}
                   onLoadStart={() => {
-                    console.log('Video load started')
                     setIsLoading(true)
                   }}
                   onCanPlay={() => {
-                    console.log('Video can play')
                     setIsLoading(false)
                   }}
                   onCanPlayThrough={() => {
-                    console.log('Video can play through')
                     setIsLoading(false)
                   }}
                   onLoadedData={() => {
-                    console.log('Video data loaded')
                     setIsLoading(false)
                   }}
                 >

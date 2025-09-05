@@ -23,6 +23,7 @@ export default function Footer() {
           <div className="text-center sm:text-left">
             <h3 className="font-semibold mb-4">Platform</h3>
             <ul className="space-y-2 text-gray-400 text-sm">
+              <li><Link href="/" className="hover:text-white">Home</Link></li>
               <li><Link href="/chat" className="hover:text-white">Chat Interface</Link></li>
               <li><Link href="/analytics" className="hover:text-white">Analytics Tool</Link></li>
               {/* <li><Link href="/dashboard" className="hover:text-white">Dashboard</Link></li> */}

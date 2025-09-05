@@ -35,16 +35,6 @@ export async function POST(request) {
     // Send confirmation email to user
     const confirmationEmailResult = await emailService.sendConfirmationEmail(email, name)
 
-    console.log('Contact Form Submission:', {
-      name,
-      email,
-      category,
-      subject,
-      message: message.substring(0, 100) + '...',
-      timestamp: new Date().toISOString(),
-      supportEmailId: supportEmailResult.messageId,
-      confirmationEmailId: confirmationEmailResult.messageId
-    })
 
     return NextResponse.json(
       { 
