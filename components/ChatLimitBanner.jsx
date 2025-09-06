@@ -24,7 +24,6 @@ export default function ChatLimitBanner({ variant = "default" }) {
   const { remaining_chats = 0, max_chats = 0 } = chatLimitInfo
   const safeMax = Number.isFinite(max_chats) && max_chats > 0 ? max_chats : 0
   const safeRemaining = Number.isFinite(remaining_chats) && remaining_chats >= 0 ? remaining_chats : 0
-  const usedChats = safeMax > 0 ? Math.max(0, safeMax - safeRemaining) : 0
 
   // Do not show banner unless the free trial limit has been reached
   if (!isLimitReached) {

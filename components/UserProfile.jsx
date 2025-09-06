@@ -3,12 +3,10 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { User, Crown, MessageSquare, Calendar, Users } from "lucide-react"
+import { User, Crown, MessageSquare, Calendar } from "lucide-react"
 import { useUser } from "@/contexts/UserContext"
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 export default function UserProfile() {
   const { user, token, logout } = useUser()

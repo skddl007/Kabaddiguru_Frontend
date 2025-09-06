@@ -3,19 +3,15 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { toast } from '@/hooks/use-toast'
 import { TeamLogo } from './MatchDetails'
 import Link from 'next/link'
 import MobileMenu from './MobileMenu'
 import { 
-  Search, 
   Users, 
-  ArrowLeft, 
   Filter, 
   Eye, 
   Target, 
@@ -142,7 +138,7 @@ export default function MatchFilters({ user, logout, onBack }) {
       // Clear matches when not both teams are selected
       setMatches([])
     }
-  }, [loadMatches])
+  }, [filters.tournament, filters.season, filters.team, filters.opponentTeam, loadMatches])
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }))

@@ -10,7 +10,7 @@ export async function GET() {
       return NextResponse.json(data, { status: response.status })
     }
     return NextResponse.json(data)
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch simple dashboard data' }, { status: 500 })
   }
 }

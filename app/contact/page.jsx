@@ -7,8 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Bot, Mail, Phone, MapPin, Send, CheckCircle, AlertCircle, MessageSquare, User, Building, File, Star, Zap, Shield, Headphones } from 'lucide-react'
+import { ArrowLeft, Mail, MapPin, Send, MessageSquare, User, Building, File, Star, Zap, Shield, Headphones } from 'lucide-react'
 import Link from "next/link"
 import MobileMenu from "@/components/MobileMenu"
 import AuthWrapper from "@/components/AuthWrapper"
@@ -529,7 +528,7 @@ export default function ContactPage() {
                         <Zap className="w-4 h-4 text-purple-500" />
                         <span>How do I upgrade my subscription?</span>
                       </h4>
-                      <p className="text-sm text-gray-600 leading-relaxed">Contact us at srikanthv40@gmail.com for subscription upgrades and premium features. We'll help you choose the best plan for your needs.</p>
+                      <p className="text-sm text-gray-600 leading-relaxed">Contact us at srikanthv40@gmail.com for subscription upgrades and premium features. We&apos;ll help you choose the best plan for your needs.</p>
                     </div>
                   </CardContent>
                 </Card>

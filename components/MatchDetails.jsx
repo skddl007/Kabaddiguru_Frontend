@@ -123,7 +123,7 @@ export default function MatchDetails({ filters, onBack }) {
     if (filters && filters.tournament && filters.season && filters.team) {
       loadMatches()
     }
-  }, [loadMatches])
+  }, [filters, loadMatches])
 
 
   const handleWatchVideo = (match) => {

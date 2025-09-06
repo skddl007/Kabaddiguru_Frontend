@@ -50,7 +50,7 @@ export async function GET(request) {
       let body = undefined
       try {
         body = contentType.includes('application/json') ? await resp.json() : await resp.text()
-      } catch (_) {}
+      } catch {}
       return NextResponse.json(
         { error: 'Upstream error', status: resp.status, body },
         { status: resp.status }

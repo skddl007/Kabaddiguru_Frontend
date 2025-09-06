@@ -122,7 +122,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = "signin" }) {
       } else {
         toast({ title: "Error", description: data.detail || "Failed to request reset.", variant: "destructive" })
       }
-    } catch (_) {
+    } catch {
       toast({ title: "Error", description: "Failed to request reset.", variant: "destructive" })
     } finally {
       setLoading(false)
@@ -154,7 +154,7 @@ export default function AuthModal({ isOpen, onClose, defaultMode = "signin" }) {
       } else {
         toast({ title: "Error", description: data.detail || "Failed to reset password.", variant: "destructive" })
       }
-    } catch (_) {
+    } catch {
       toast({ title: "Error", description: "Failed to reset password.", variant: "destructive" })
     } finally {
       setLoading(false)

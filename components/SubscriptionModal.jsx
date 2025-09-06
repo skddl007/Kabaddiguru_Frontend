@@ -1,9 +1,8 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Badge } from "@/components/ui/badge"
 import { Check, Crown, Shield, X, Mail, MessageCircle } from "lucide-react"
 
 export default function SubscriptionModal({ isOpen, onClose }) {
@@ -103,7 +102,7 @@ export default function SubscriptionModal({ isOpen, onClose }) {
             </div>
             
             <h3 className="text-xl font-bold text-blue-900 mb-3">
-              Ready to Upgrade? Let's Discuss!
+              Ready to Upgrade? Let&apos;s Discuss!
             </h3>
             
             <p className="text-blue-800 mb-6 max-w-2xl mx-auto">

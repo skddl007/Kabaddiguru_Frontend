@@ -1,9 +1,8 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, Bot, Upload, BarChart3, MessageSquare, Zap, Shield, TrendingUp, Menu, X, User, LogOut, Target, Users, Swords } from 'lucide-react'
+import { ArrowRight, Menu, X, User, LogOut } from 'lucide-react'
 import Link from "next/link"
 import { useState } from "react"
 import MobileMenu from "@/components/MobileMenu"

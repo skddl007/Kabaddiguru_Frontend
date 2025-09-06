@@ -92,7 +92,7 @@ export default function DashboardFilters({ onFiltersChange, onViewMatches }) {
         title: "Filters Applied",
         description: "Loading matches with selected criteria...",
       })
-    } catch (_) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to load matches. Please try again.",

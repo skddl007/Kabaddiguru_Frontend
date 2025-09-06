@@ -1,7 +1,6 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { 
   ArrowRight, 
@@ -13,7 +12,6 @@ import {
   Calendar,
   Trophy,
   TrendingUp,
-  Shield,
   Zap,
   Search,
   Filter,
@@ -205,9 +203,9 @@ const PlatformPreviewCarousel = () => {
               </h4>
               <div className="bg-white p-3 rounded border">
                 <div className="text-sm text-gray-700 leading-relaxed">
-                  "The match showcased exceptional defensive strategies from both teams. 
-                  Telugu Titans' raiding unit demonstrated superior agility in the second half, 
-                  while Bengaluru Bulls maintained strong defensive formations throughout..."
+                  &quot;The match showcased exceptional defensive strategies from both teams. 
+                  Telugu Titans&apos; raiding unit demonstrated superior agility in the second half, 
+                  while Bengaluru Bulls maintained strong defensive formations throughout...&quot;
                 </div>
               </div>
             </div>

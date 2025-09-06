@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { Bot } from 'lucide-react'
 
 export default function Footer() {
   return (

@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowLeft, Bot, Users, Target, Zap, Shield, Globe, TrendingUp, BarChart3, Brain, Database, Github, Linkedin, Twitter, Mail } from 'lucide-react'
+import { ArrowLeft, Users, Target, Zap, Shield, Globe, TrendingUp, BarChart3, Brain, Database } from 'lucide-react'
 import Link from "next/link"
 import MobileMenu from "@/components/MobileMenu"
 import AuthWrapper from "@/components/AuthWrapper"

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,7 +14,6 @@ import ChatLimitBanner from "@/components/ChatLimitBanner"
 import { useUser } from "@/contexts/UserContext"
 import MobileMenu from "@/components/MobileMenu"
 import SubscriptionModal from "@/components/SubscriptionModal"
-import { toast } from "@/hooks/use-toast"
 // Removed VideoPlayer import - using simple iframe approach
 
 
@@ -190,27 +189,7 @@ export default function DashboardPage() {
     loadVideoUrl(raid.Unique_Raid_Identifier)
   }
 
-
-
-
-
-  // Load initial data
-  useEffect(() => {
-    if (isAuthenticated && token) {
-      checkFilterLimit()
-    }
-    // Always load main overview regardless of auth (overview endpoints are public)
-    loadMainOverview(selectedSeason)
-  }, [isAuthenticated, token, selectedSeason])
-
-  useEffect(() => {
-    // Reload overview when season changes
-    loadMainOverview(selectedSeason)
-  }, [selectedSeason])
-
-  // loadInitialData archived to separate file
-
-  const checkFilterLimit = async () => {
+  const checkFilterLimit = useCallback(async () => {
     try {
       const response = await fetch(`/api/dashboard/filter-limit`, {
         headers: { "Authorization": `Bearer ${token}` }
@@ -228,9 +207,9 @@ export default function DashboardPage() {
     } catch (error) {
       console.error('Error checking filter limit:', error)
     }
-  }
+  }, [token])
 
-  const loadMainOverview = async () => {
+  const loadMainOverview = useCallback(async () => {
     setIsLoading(true)
     setError(null)
     try {
@@ -277,7 +256,24 @@ export default function DashboardPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [token, selectedSeason])
+
+
+
+
+
+  // Load initial data
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      checkFilterLimit()
+    }
+    // Always load main overview regardless of auth (overview endpoints are public)
+    loadMainOverview(selectedSeason)
+  }, [isAuthenticated, token, selectedSeason, checkFilterLimit, loadMainOverview])
+
+  // loadInitialData archived to separate file
+
+
 
   // Filters logic archived to separate file
 

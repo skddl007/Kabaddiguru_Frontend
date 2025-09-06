@@ -91,7 +91,7 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
          }
          // Don't decode or re-encode URLs that are already properly formatted
          // The database already contains correctly encoded URLs
-       } catch (e) {
+       } catch {
          console.warn('URL parsing failed, using original:', cleanUrl)
        }
       
@@ -134,7 +134,7 @@ export default function VideoPlayer({ isOpen, onClose, raidId, raidData }) {
     if (isOpen && (raidId || raidData?.video_url)) {
       loadVideoUrl()
     }
-  }, [isOpen, loadVideoUrl])
+  }, [isOpen, raidId, raidData?.video_url, loadVideoUrl])
 
   // Reset video state when video URL changes
   useEffect(() => {

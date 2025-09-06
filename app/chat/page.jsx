@@ -16,7 +16,6 @@ import {
   ChevronDown,
   ChevronUp,
   X,
-  Bot,
   User,
   Home,
   Code,
@@ -24,13 +23,7 @@ import {
   File,
   MoreHorizontal,
   Wifi,
-  WifiOff,
-  Target,
-  TrendingUp,
-  Users,
-  Zap,
-  Shield,
-  Mail
+  WifiOff
 } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import Link from "next/link"
@@ -507,7 +500,7 @@ export default function ChatPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [input, isLoading, currentChatId, messages.length, connectionStatus, debounceTimer, canChat, isAdmin, token, refreshChatLimit, setShowSubscriptionModal, getUserScopedKey, getMessagesKey])
+  }, [input, isLoading, currentChatId, messages, INACTIVITY_WINDOW_MS, connectionStatus, debounceTimer, canChat, isAdmin, token, refreshChatLimit, setShowSubscriptionModal, getUserScopedKey, getMessagesKey])
 
   const startNewChat = () => {
     setMessages([{
