@@ -8,6 +8,8 @@ import { useUser } from "@/contexts/UserContext"
 import ChatLimitBanner from "@/components/ChatLimitBanner"
 import SubscriptionModal from "@/components/SubscriptionModal"
 import MobileMenu from "@/components/MobileMenu"
+import { BarChart3, MessageSquare, Target, TrendingUp, Users, Zap, Shield, User, Mail } from 'lucide-react'
+import Link from 'next/link'
 
 export default function MatchesPage() {
   const router = useRouter()
@@ -59,6 +61,7 @@ export default function MatchesPage() {
           isOpen={showSubscriptionModal}
           onClose={() => setShowSubscriptionModal(false)}
         />
+
       </div>
     </AuthWrapper>
   )

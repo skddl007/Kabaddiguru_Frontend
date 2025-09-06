@@ -10,8 +10,12 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="space-y-4 text-center sm:text-left">
             <div className="flex items-center space-x-2 justify-center sm:justify-start">
-              <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
-                <Bot className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 rounded-lg overflow-hidden">
+                <img 
+                  src="/KabaddiGuru Logo.jpeg" 
+                  alt="KabaddiGuru Logo" 
+                  className="w-full h-full object-cover"
+                />
               </div>
               <span className="text-xl font-bold">KabaddiGuru</span>
             </div>

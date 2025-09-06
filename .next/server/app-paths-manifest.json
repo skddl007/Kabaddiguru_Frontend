@@ -1,10 +1,11 @@
 {
-  "/api/analytics/players/search/route": "app/api/analytics/players/search/route.js",
-  "/api/analytics/players/opponents/route": "app/api/analytics/players/opponents/route.js",
-  "/api/analytics/players/filter/route": "app/api/analytics/players/filter/route.js",
-  "/_not-found/page": "app/_not-found/page.js",
-  "/page": "app/page.js",
-  "/analytics/page": "app/analytics/page.js",
+  "/api/dashboard/overview/season-stats/route": "app/api/dashboard/overview/season-stats/route.js",
+  "/api/dashboard/filter-limit/route": "app/api/dashboard/filter-limit/route.js",
+  "/api/dashboard/overview/points-table/route": "app/api/dashboard/overview/points-table/route.js",
+  "/api/dashboard/overview/team-performance/route": "app/api/dashboard/overview/team-performance/route.js",
+  "/chat/page": "app/chat/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/players/page": "app/players/page.js"
+  "/matches/page": "app/matches/page.js",
+  "/page": "app/page.js",
+  "/analytics/page": "app/analytics/page.js"
 }

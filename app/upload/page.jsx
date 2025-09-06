@@ -93,8 +93,12 @@ export default function UploadPage() {
               {/* Enhanced Logo */}
               <div className="flex items-center space-x-3 sm:space-x-4">
                 <div className="relative">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-orange-500 via-red-500 to-yellow-500 rounded-xl flex items-center justify-center shadow-lg">
-                    <Bot className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden shadow-lg">
+                    <img 
+                      src="/KabaddiGuru Logo.jpeg" 
+                      alt="KabaddiGuru Logo" 
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
                 </div>
@@ -393,6 +397,172 @@ export default function UploadPage() {
         </div>
       </div>
     </div>
+
+    {/* Enhanced Footer */}
+    <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white relative overflow-hidden">
+      {/* Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        {/* Main Footer Content */}
+        <div className="py-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
+            {/* Brand Section */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg">
+                  <img 
+                    src="/KabaddiGuru Logo.jpeg" 
+                    alt="KabaddiGuru Logo" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div>
+                  <span className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">KabaddiGuru</span>
+                  <p className="text-gray-400 text-sm">Intelligent Sports Analytics</p>
+                </div>
+              </div>
+              <p className="text-gray-400 text-sm leading-relaxed max-w-md">
+                The ultimate analytics platform for Kabaddi teams and analysts. Transform your data into actionable insights with AI-powered analysis and real-time performance tracking.
+              </p>
+              
+              {/* Social Links */}
+              <div className="flex space-x-4">
+                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-orange-600 transition-colors duration-300">
+                  <span className="text-sm font-bold">f</span>
+                </a>
+                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-orange-600 transition-colors duration-300">
+                  <span className="text-sm font-bold">t</span>
+                </a>
+                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-orange-600 transition-colors duration-300">
+                  <span className="text-sm font-bold">in</span>
+                </a>
+                <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-orange-600 transition-colors duration-300">
+                  <span className="text-sm font-bold">yt</span>
+                </a>
+              </div>
+            </div>
+            
+            {/* Platform Links */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-orange-500" />
+                Platform
+              </h3>
+              <ul className="space-y-3 text-gray-400 text-sm">
+                <li>
+                  <Link href="/chat" className="flex items-center gap-2 hover:text-orange-400 transition-colors duration-300">
+                    <MessageSquare className="w-4 h-4" />
+                    Chat Interface
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/analytics" className="flex items-center gap-2 hover:text-orange-400 transition-colors duration-300">
+                    <Target className="w-4 h-4" />
+                    Analytics Tool
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/dashboard" className="flex items-center gap-2 hover:text-orange-400 transition-colors duration-300">
+                    <TrendingUp className="w-4 h-4" />
+                    Dashboard
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/players" className="flex items-center gap-2 hover:text-orange-400 transition-colors duration-300">
+                    <Users className="w-4 h-4" />
+                    Players Analytics
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            
+            {/* Features */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                <Zap className="w-5 h-5 text-orange-500" />
+                Features
+              </h3>
+              <ul className="space-y-3 text-gray-400 text-sm">
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                  AI-Powered Analytics
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                  Real-time Performance Tracking
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                  Team Insights & Reports
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                  Match Analysis
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                  Video Integration
+                </li>
+              </ul>
+            </div>
+            
+            {/* Support & Contact */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                <Shield className="w-5 h-5 text-orange-500" />
+                Support
+              </h3>
+              <ul className="space-y-3 text-gray-400 text-sm">
+                <li>
+                  <Link href="/about" className="flex items-center gap-2 hover:text-orange-400 transition-colors duration-300">
+                    <User className="w-4 h-4" />
+                    About Us
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/contact" className="flex items-center gap-2 hover:text-orange-400 transition-colors duration-300">
+                    <MessageSquare className="w-4 h-4" />
+                    Contact Support
+                  </Link>
+                </li>
+                <li>
+                  <a 
+                    href="mailto:srikanthv40@gmail.com?subject=KabaddiGuru Support&body=Hi, I need support with KabaddiGuru. Please help me with:"
+                    className="flex items-center gap-2 hover:text-orange-400 transition-colors duration-300"
+                  >
+                    <Mail className="w-4 h-4" />
+                    Email Support
+                  </a>
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span>24/7 Available</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        
+        {/* Bottom Bar */}
+        <div className="py-6 border-t border-gray-800">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="text-gray-400 text-sm">
+              <p>&copy; 2025 KabaddiGuru. All rights reserved.</p>
+            </div>
+            <div className="flex flex-wrap gap-6 text-gray-400 text-sm">
+              <Link href="/privacy" className="hover:text-orange-400 transition-colors duration-300">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-orange-400 transition-colors duration-300">Terms of Service</Link>
+              <Link href="/cookies" className="hover:text-orange-400 transition-colors duration-300">Cookie Policy</Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
     </AuthWrapper>
   )
 }

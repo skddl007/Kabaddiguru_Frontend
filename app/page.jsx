@@ -3,12 +3,13 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowRight, Bot, Upload, BarChart3, MessageSquare, Zap, Shield, TrendingUp, Menu, X, User, LogOut } from 'lucide-react'
+import { ArrowRight, Bot, Upload, BarChart3, MessageSquare, Zap, Shield, TrendingUp, Menu, X, User, LogOut, Target, Users, Swords, Mail } from 'lucide-react'
 import Link from "next/link"
 import { useState } from "react"
 import MobileMenu from "@/components/MobileMenu"
 import AuthModal from "@/components/AuthModal"
 import SubscriptionModal from "@/components/SubscriptionModal"
+import PlatformPreviewCarousel from "@/components/PlatformPreviewCarousel"
 import { useUser } from "@/contexts/UserContext"
 
 export default function HomePage() {
@@ -30,8 +31,12 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
-                <Bot className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 rounded-lg overflow-hidden">
+                <img 
+                  src="/KabaddiGuru Logo.jpeg" 
+                  alt="KabaddiGuru Logo" 
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div className="flex flex-col">
                 <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
@@ -54,9 +59,6 @@ export default function HomePage() {
               <Link href="/dashboard">
                 <Button variant="ghost">Dashboard</Button>
               </Link>
-              {/* <Link href="/upload">
-                <Button variant="ghost">Upload Data</Button>
-              </Link> */}
               <div className="w-px h-6 bg-gray-300 mx-2"></div>
               <Link href="/about">
                 <Button variant="ghost">About</Button>
@@ -70,7 +72,7 @@ export default function HomePage() {
                   {(() => {
                     const displayName = user?.full_name || user?.name || user?.username || (user?.email ? user.email.split('@')[0] : "User")
                     return (
-                      <span className="text-sm text-gray-600 truncate max-w-[160px] md:max-w-[220px]" title={`Welcome, ${displayName}`}>Welcome, {displayName}</span>
+                      <span className="text-sm text-gray-600 truncate max-w-[160px] md:max-w-[220px]" title={`Welcome, ${displayName}`}>Welcome, ${displayName}</span>
                     )
                   })()}
                   <Button 
@@ -169,11 +171,6 @@ export default function HomePage() {
                         <ArrowRight className="ml-2 w-5 h-5" />
                       </Button>
                     </Link>
-                    {/* <Link href="/dashboard">
-                      <Button size="lg" variant="outline" className="border-orange-200 hover:bg-orange-50 w-full sm:w-auto">
-                        View Dashboard
-                      </Button>
-                    </Link> */}
                   </>
                 ) : (
                   <>
@@ -234,93 +231,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Powerful Features for Kabaddi Analytics
-            </h2>
-            <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto px-4">
-              Our AI-powered platform provides comprehensive tools for analyzing Kabaddi performance data
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            <Card className="border-orange-100 hover:shadow-lg transition-shadow">
-              <CardHeader className="text-center sm:text-left">
-                <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center mb-4 mx-auto sm:mx-0">
-                  <MessageSquare className="w-6 h-6 text-white" />
-                </div>
-                <CardTitle className="text-orange-900 text-lg">Natural Language Chat</CardTitle>
-                <CardDescription className="text-sm">
-                  Ask questions about your Kabaddi data in plain English and get instant insights
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="border-red-100 hover:shadow-lg transition-shadow">
-              <CardHeader className="text-center sm:text-left">
-                <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-pink-500 rounded-lg flex items-center justify-center mb-4 mx-auto sm:mx-0">
-                  <Upload className="w-6 h-6 text-white" />
-                </div>
-                <CardTitle className="text-red-900 text-lg">Easy Data Upload</CardTitle>
-                <CardDescription className="text-sm">
-                  Upload CSV, Excel files or connect databases with automatic schema mapping
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="border-yellow-100 hover:shadow-lg transition-shadow">
-              <CardHeader className="text-center sm:text-left">
-                <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center mb-4 mx-auto sm:mx-0">
-                  <BarChart3 className="w-6 h-6 text-white" />
-                </div>
-                <CardTitle className="text-yellow-900 text-lg">Interactive Dashboard</CardTitle>
-                <CardDescription className="text-sm">
-                  Visualize player performance, match statistics, and team analytics in real-time
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="border-green-100 hover:shadow-lg transition-shadow">
-              <CardHeader className="text-center sm:text-left">
-                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-teal-500 rounded-lg flex items-center justify-center mb-4 mx-auto sm:mx-0">
-                  <Zap className="w-6 h-6 text-white" />
-                </div>
-                <CardTitle className="text-green-900 text-lg">Proactive Insights</CardTitle>
-                <CardDescription className="text-sm">
-                  AI automatically detects patterns, anomalies, and trends in your Kabaddi data
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="border-blue-100 hover:shadow-lg transition-shadow">
-              <CardHeader className="text-center sm:text-left">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mb-4 mx-auto sm:mx-0">
-                  <Shield className="w-6 h-6 text-white" />
-                </div>
-                <CardTitle className="text-blue-900 text-lg">Secure & Scalable</CardTitle>
-                <CardDescription className="text-sm">
-                  Enterprise-grade security with scalable architecture for teams of any size
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="border-purple-100 hover:shadow-lg transition-shadow">
-              <CardHeader className="text-center sm:text-left">
-                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mb-4 mx-auto sm:mx-0">
-                  <TrendingUp className="w-6 h-6 text-white" />
-                </div>
-                <CardTitle className="text-purple-900 text-lg">Performance Tracking</CardTitle>
-                <CardDescription className="text-sm">
-                  Track player performance over time with detailed analytics and comparisons
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </div>
-        </div>
-      </section>
+      {/* Platform Preview Carousel */}
+      <PlatformPreviewCarousel />
 
       {/* CTA Section */}
       <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-r from-orange-500 to-red-500">
@@ -331,105 +243,194 @@ export default function HomePage() {
           <p className="text-lg sm:text-xl text-orange-100 mb-8">
             Join teams already using KabaddiGuru to gain competitive advantages through data-driven insights
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex justify-center">
             {isAuthenticated ? (
-              <>
-                <Link href="/chat">
-                  <Button size="lg" className="bg-white text-orange-600 hover:bg-orange-50 px-6 sm:px-8 w-full sm:w-auto">
-                    Start Chatting
-                    <ArrowRight className="ml-2 w-5 h-5" />
-                  </Button>
-                </Link>
-                <Link href="/analytics">
-                  <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-orange-600 px-6 sm:px-8 w-full sm:w-auto">
-                    Open Analytics Tool
-                    </Button>
-                </Link>
-                {/* <Link href="/upload">
-                  <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-orange-600 px-6 sm:px-8 w-full sm:w-auto">
-                    Upload Your Data
-                  </Button>
-                </Link> */}
-              </>
-            ) : (
-              <>
-                <Button 
-                  size="lg" 
-                  className="bg-white text-orange-600 hover:bg-orange-50 px-6 sm:px-8 w-full sm:w-auto"
-                  onClick={() => {
-                    setAuthMode("signup")
-                    setAuthModalOpen(true)
-                  }}
-                >
-                  Start Free Trial
+              <Link href="/chat">
+                <Button size="lg" className="bg-white text-orange-600 hover:bg-orange-50 px-6 sm:px-8">
+                  Start Chatting
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="border-white text-orange-200 hover:bg-white hover:text-orange-600 px-6 sm:px-8 w-full sm:w-auto font-semibold"
-                  onClick={() => {
-                    setAuthMode("signin")
-                    setAuthModalOpen(true)
-                  }}
-                >
-                  Sign In
-                </Button>
-              </>
+              </Link>
+            ) : (
+              <Button 
+                size="lg" 
+                className="bg-white text-orange-600 hover:bg-orange-50 px-6 sm:px-8"
+                onClick={() => {
+                  setAuthMode("signup")
+                  setAuthModalOpen(true)
+                }}
+              >
+                Start Free Trial
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
             )}
           </div>
+
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="space-y-4 text-center sm:text-left">
-              <div className="flex items-center space-x-2 justify-center sm:justify-start">
-                <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-white" />
+      {/* Enhanced Footer */}
+      <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white relative overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-red-500/5 rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          {/* Main Footer Content */}
+          <div className="py-16">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
+              {/* Brand Section */}
+              <div className="lg:col-span-2 space-y-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg">
+                    <img 
+                      src="/KabaddiGuru Logo.jpeg" 
+                      alt="KabaddiGuru Logo" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">KabaddiGuru</span>
+                    <p className="text-gray-400 text-sm">Intelligent Sports Analytics</p>
+                  </div>
                 </div>
-                <span className="text-xl font-bold">KabaddiGuru</span>
+                <p className="text-gray-400 text-sm leading-relaxed max-w-md">
+                  The ultimate analytics platform for Kabaddi teams and analysts. Transform your data into actionable insights with AI-powered analysis and real-time performance tracking.
+                </p>
+                
+                {/* Social Links */}
+                <div className="flex space-x-4">
+                  <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-orange-600 transition-colors duration-300">
+                    <span className="text-sm font-bold">f</span>
+                  </a>
+                  <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-orange-600 transition-colors duration-300">
+                    <span className="text-sm font-bold">t</span>
+                  </a>
+                  <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-orange-600 transition-colors duration-300">
+                    <span className="text-sm font-bold">in</span>
+                  </a>
+                  <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-orange-600 transition-colors duration-300">
+                    <span className="text-sm font-bold">yt</span>
+                  </a>
+                </div>
               </div>
-              <p className="text-gray-400 text-sm">
-                Intelligent sports analytics platform for Kabaddi teams and analysts.
-              </p>
-            </div>
-            
-            <div className="text-center sm:text-left">
-              <h3 className="font-semibold mb-4">Platform</h3>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li><Link href="/chat" className="hover:text-white">Chat Interface</Link></li>
-                {/* <li><Link href="/dashboard" className="hover:text-white">Dashboard</Link></li> */}
-                {/* <li><Link href="/upload" className="hover:text-white">Data Upload</Link></li> */}
-                <li><Link href="/analytics" className="hover:text-white">Analytics Tool</Link></li>
-              </ul>
-            </div>
-            
-            <div className="text-center sm:text-left">
-              <h3 className="font-semibold mb-4">Features</h3>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li>AI Analytics</li>
-                <li>Performance Tracking</li>
-                <li>Team Insights</li>
-                <li>Match Analysis</li>
-              </ul>
-            </div>
-            
-            <div className="text-center sm:text-left">
-              <h3 className="font-semibold mb-4">Support</h3>
-              <ul className="space-y-2 text-gray-400 text-sm">
-                <li><Link href="/about" className="hover:text-white">About Us</Link></li>
-                <li><Link href="/contact" className="hover:text-white">Contact Support</Link></li>
-                <li>Documentation</li>
-                <li>API Reference</li>
-              </ul>
+              
+              {/* Platform Links */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-orange-500" />
+                  Platform
+                </h3>
+                <ul className="space-y-3 text-gray-400 text-sm">
+                  <li>
+                    <Link href="/chat" className="flex items-center gap-2 hover:text-orange-400 transition-colors duration-300">
+                      <MessageSquare className="w-4 h-4" />
+                      Chat Interface
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/analytics" className="flex items-center gap-2 hover:text-orange-400 transition-colors duration-300">
+                      <Target className="w-4 h-4" />
+                      Analytics Tool
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/dashboard" className="flex items-center gap-2 hover:text-orange-400 transition-colors duration-300">
+                      <TrendingUp className="w-4 h-4" />
+                      Dashboard
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/players" className="flex items-center gap-2 hover:text-orange-400 transition-colors duration-300">
+                      <Users className="w-4 h-4" />
+                      Players Analytics
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+              
+              {/* Features */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-orange-500" />
+                  Features
+                </h3>
+                <ul className="space-y-3 text-gray-400 text-sm">
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                    AI-Powered Analytics
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                    Real-time Performance Tracking
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                    Team Insights & Reports
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                    Match Analysis
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                    Video Integration
+                  </li>
+                </ul>
+              </div>
+              
+              {/* Support & Contact */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-orange-500" />
+                  Support
+                </h3>
+                <ul className="space-y-3 text-gray-400 text-sm">
+                  <li>
+                    <Link href="/about" className="flex items-center gap-2 hover:text-orange-400 transition-colors duration-300">
+                      <User className="w-4 h-4" />
+                      About Us
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/contact" className="flex items-center gap-2 hover:text-orange-400 transition-colors duration-300">
+                      <MessageSquare className="w-4 h-4" />
+                      Contact Support
+                    </Link>
+                  </li>
+                  <li>
+                    <a 
+                      href="mailto:srikanthv40@gmail.com?subject=KabaddiGuru Support&body=Hi, I need support with KabaddiGuru. Please help me with:"
+                      className="flex items-center gap-2 hover:text-orange-400 transition-colors duration-300"
+                    >
+                      <Mail className="w-4 h-4" />
+                      Email Support
+                    </a>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span>24/7 Available</span>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
+
           
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 text-sm">
-            <p>&copy; 2025 KabaddiGuru. All rights reserved.</p>
+          {/* Bottom Bar */}
+          <div className="py-6 border-t border-gray-800">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div className="text-gray-400 text-sm">
+                <p>&copy; 2025 KabaddiGuru. All rights reserved.</p>
+              </div>
+              <div className="flex flex-wrap gap-6 text-gray-400 text-sm">
+                <Link href="/privacy" className="hover:text-orange-400 transition-colors duration-300">Privacy Policy</Link>
+                <Link href="/terms" className="hover:text-orange-400 transition-colors duration-300">Terms of Service</Link>
+                <Link href="/cookies" className="hover:text-orange-400 transition-colors duration-300">Cookie Policy</Link>
+              </div>
+            </div>
           </div>
         </div>
       </footer>

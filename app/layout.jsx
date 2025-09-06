@@ -10,9 +10,9 @@ export const metadata = {
   title: "KabaddiGuru - Intelligent Sports Analytics",
   description: "AI-powered KabaddiGuru analytics and insights platform",
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon.ico',
-    apple: '/favicon.ico',
+    icon: '/KabaddiGuru Logo.jpeg',
+    shortcut: '/KabaddiGuru Logo.jpeg',
+    apple: '/KabaddiGuru Logo.jpeg',
   },
 }
 

@@ -24,7 +24,13 @@ import {
   File,
   MoreHorizontal,
   Wifi,
-  WifiOff
+  WifiOff,
+  Target,
+  TrendingUp,
+  Users,
+  Zap,
+  Shield,
+  Mail
 } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import Link from "next/link"
@@ -1101,8 +1107,12 @@ export default function ChatPage() {
         <div className="border-b border-gray-200 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
-                <Bot className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 rounded-lg overflow-hidden">
+                <img 
+                  src="/KabaddiGuru Logo.jpeg" 
+                  alt="KabaddiGuru Logo" 
+                  className="w-full h-full object-cover"
+                />
               </div>
               <span className="font-semibold text-gray-900">KabaddiGuru</span>
             </div>
@@ -1216,8 +1226,12 @@ export default function ChatPage() {
                   </Button>
                   <div>
                     <div className="flex items-center space-x-2">
-                      <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
-                        <Bot className="w-5 h-5 text-white" />
+                      <div className="w-8 h-8 rounded-lg overflow-hidden">
+                        <img 
+                          src="/KabaddiGuru Logo.jpeg" 
+                          alt="KabaddiGuru Logo" 
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                       <div className="flex flex-col">
                         <span className="text-lg lg:text-xl font-semibold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
@@ -1306,10 +1320,12 @@ export default function ChatPage() {
                 }`}
               >
                 {message.role === "assistant" && (
-                  <Avatar className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500">
-                    <AvatarFallback>
-                      <Bot className="w-4 h-4 text-white" />
-                    </AvatarFallback>
+                  <Avatar className="w-8 h-8">
+                    <img 
+                      src="/KabaddiGuru Logo.jpeg" 
+                      alt="KabaddiGuru Logo" 
+                      className="w-full h-full object-cover"
+                    />
                   </Avatar>
                 )}
                 
@@ -1493,10 +1509,12 @@ export default function ChatPage() {
 
             {isLoading && (
               <div className="flex items-start space-x-3">
-                <Avatar className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500">
-                  <AvatarFallback>
-                    <Bot className="w-4 h-4 text-white" />
-                  </AvatarFallback>
+                <Avatar className="w-8 h-8">
+                  <img 
+                    src="/KabaddiGuru Logo.jpeg" 
+                    alt="KabaddiGuru Logo" 
+                    className="w-full h-full object-cover"
+                  />
                 </Avatar>
                 <Card className="bg-white border-gray-200">
                   <CardContent className="p-4 lg:p-6">
@@ -1855,6 +1873,7 @@ export default function ChatPage() {
           </div>
         </div>
       )}
+
 
     </div>
     </AuthWrapper>

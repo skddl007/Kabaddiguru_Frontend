@@ -241,8 +241,12 @@ export default function MatchFilters({ user, logout, onBack }) {
             {/* Logo and Title */}
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-600 rounded-lg flex items-center justify-center shadow-lg">
-                  <Trophy className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg border-2 border-white/20">
+                  <img 
+                    src="/KabaddiGuru Logo.jpeg" 
+                    alt="KabaddiGuru Logo" 
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               </div>
               <div className="ml-3">
