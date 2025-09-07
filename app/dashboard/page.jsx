@@ -601,9 +601,9 @@ export default function DashboardPage() {
                           <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Pos ▲</th>
                           <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Team</th>
                           <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Played</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">W</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">L</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">T</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Won</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Loss</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Drawn</th>
                           <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Pts</th>
                           <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Status</th>
                         </tr>
@@ -643,7 +643,6 @@ export default function DashboardPage() {
                                      <TeamLogo teamCode={row.teamCode} size="md" />
                                      <div className="flex flex-col">
                                        <span className="font-medium text-gray-900">{row.team}</span>
-                                       <span className="text-xs text-gray-500 font-medium">{row.teamCode}</span>
                                      </div>
                                    </div>
                                  </td>
