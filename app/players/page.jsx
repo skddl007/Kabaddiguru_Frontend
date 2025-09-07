@@ -84,26 +84,20 @@ export default function PlayersPage() {
     return TEAM_NAME_MAP[code] || raw
   }
 
-  // Check filter limit for players page
+  // Check filter limit only when needed (on filter action)
   const checkFilterLimit = async () => {
-    if (!token) return
-    
+    if (!token) return null
     try {
       const response = await fetch(`/api/dashboard/filter-limit`, {
         headers: { "Authorization": `Bearer ${token}` }
       })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setFilterLimitInfo(data)
-        
-        // Show upgrade modal if limit reached and user is not premium/admin
-        if (!data.can_filter && !data.is_admin) {
-          setShowUpgradeModal(true)
-        }
-      }
+      if (!response.ok) return null
+      const data = await response.json()
+      setFilterLimitInfo(data)
+      return data
     } catch (error) {
       console.error('Error checking filter limit:', error)
+      return null
     }
   }
 
@@ -126,12 +120,7 @@ export default function PlayersPage() {
     }
   }
 
-  // Load filter limit on component mount
-  useEffect(() => {
-    if (isAuthenticated && token) {
-      checkFilterLimit()
-    }
-  }, [isAuthenticated, token, checkFilterLimit])
+  // Note: intentionally not checking filter limit on mount to avoid extra calls
 
   // Suggest players
   useEffect(() => {
@@ -223,15 +212,18 @@ export default function PlayersPage() {
       return
     }
 
-    // Check filter limit for free users
-    if (filterLimitInfo && !filterLimitInfo.can_filter && !filterLimitInfo.is_admin) {
-      toast({ 
-        title: 'Filter Limit Reached', 
-        description: `You've used ${filterLimitInfo.filter_count} of ${filterLimitInfo.max_filters} filter attempts. Upgrade to continue.`,
-        variant: 'destructive' 
-      })
-      setShowUpgradeModal(true)
-      return
+    // Check filter limit for free users (on demand)
+    if (isAuthenticated && token) {
+      const latestLimit = await checkFilterLimit()
+      if (latestLimit && !latestLimit.can_filter && !latestLimit.is_admin) {
+        toast({ 
+          title: 'Filter Limit Reached', 
+          description: `You've used ${latestLimit.filter_count} of ${latestLimit.max_filters} filter attempts. Upgrade to continue.`,
+          variant: 'destructive' 
+        })
+        setShowUpgradeModal(true)
+        return
+      }
     }
 
     setIsLoading(true)
@@ -358,9 +350,9 @@ export default function PlayersPage() {
                 <Link href="/analytics">
                   <Button variant="ghost" className="text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-all duration-300 hover:scale-105">Analytics Tool</Button>
                 </Link>
-                <Link href="/matches">
+                {/* <Link href="/matches">
                   <Button variant="ghost" className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-300 hover:scale-105">Matches</Button>
-                </Link>
+                </Link> */}
                 <Link href="/dashboard">
                   <Button variant="ghost" className="text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-300 hover:scale-105">
                     Dashboard
@@ -554,13 +546,13 @@ export default function PlayersPage() {
                   <Button onClick={handleSearch} disabled={isLoading} className="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white shadow-md">
                     {isLoading ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin"/> Filter</>) : (<>Filter</>)}
                   </Button>
-                  <Button variant="outline" size="default" onClick={() => setShowAdvanced(v => !v)} className="border-emerald-300 text-emerald-700 hover:bg-emerald-50">
+                  {/* <Button variant="outline" size="default" onClick={() => setShowAdvanced(v => !v)} className="border-emerald-300 text-emerald-700 hover:bg-emerald-50">
                     {showAdvanced ? 'Hide Advanced' : 'Advanced'}
-                  </Button>
+                  </Button> */}
                 </div>
               </div>
 
-              {showAdvanced && (
+              {false && (
                 <div className="space-y-4">
                   {/* Advanced Filters Row */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -676,7 +668,7 @@ export default function PlayersPage() {
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                   <CardTitle className="bg-gradient-to-r from-teal-700 to-emerald-600 bg-clip-text text-transparent">Results ({items.length})</CardTitle>
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
+                    {/* <div className="flex items-center gap-2">
                       <Label className="text-xs text-gray-600">Result</Label>
                       <select
                         value={resultFilter}
@@ -688,7 +680,7 @@ export default function PlayersPage() {
                         <option value="unsuccessful">Unsuccessful</option>
                         <option value="empty">Empty</option>
                       </select>
-                    </div>
+                    </div> */}
                     <div className="flex items-center gap-2">
                       <Label className="text-xs text-gray-600">Sort by</Label>
                       <select

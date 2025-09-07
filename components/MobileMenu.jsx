@@ -87,7 +87,7 @@ export default function MobileMenu({ isOpen, onClose, onAuthModalOpen, currentPa
                 Analytics Tool
               </Button>
             </Link>
-            <Link href="/matches" onClick={onClose}>
+            {/* <Link href="/matches" onClick={onClose}>
               <Button 
                 variant="ghost" 
                 className={`w-full justify-start text-left ${
@@ -98,7 +98,7 @@ export default function MobileMenu({ isOpen, onClose, onAuthModalOpen, currentPa
               >
                 Matches
               </Button>
-            </Link>
+            </Link> */}
             <Link href="/dashboard" onClick={onClose}>
               <Button 
                 variant="ghost" 

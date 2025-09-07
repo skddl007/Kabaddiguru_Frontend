@@ -421,11 +421,11 @@ export default function AboutPage() {
                     <p className="text-sm text-gray-600 leading-relaxed mb-4">
                       Complete match data, historical analysis, and team comparisons with detailed insights.
                     </p>
-                    <Link href="/matches">
+                    {/* <Link href="/matches">
                       <Button size="sm" className="w-full bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white">
                         View Matches
                       </Button>
-                    </Link>
+                    </Link> */}
                   </CardContent>
                 </Card>
 

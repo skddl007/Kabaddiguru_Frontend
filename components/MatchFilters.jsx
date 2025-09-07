@@ -262,11 +262,11 @@ export default function MatchFilters({ user, logout, onBack }) {
               <Link href="/analytics">
                 <Button variant="ghost" className="text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-all duration-300 hover:scale-105">Analytics Tool</Button>
               </Link>
-              <Link href="/matches">
+              {/* <Link href="/matches">
                 <Button variant="ghost" className="bg-gradient-to-r from-violet-500 to-purple-600 text-white hover:from-violet-600 hover:to-purple-700 font-medium border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
                   Matches
                 </Button>
-              </Link>
+              </Link> */}
               <Link href="/dashboard">
                 <Button variant="ghost" className="text-gray-600 hover:text-green-600 hover:bg-green-50 transition-all duration-300 hover:scale-105">Dashboard</Button>
               </Link>

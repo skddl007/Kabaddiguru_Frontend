@@ -320,9 +320,9 @@ export default function DashboardPage() {
               <Link href="/analytics">
                 <Button variant="ghost" className="text-gray-600 hover:text-purple-600 hover:bg-purple-50 transition-all duration-300 hover:scale-105">Analytics Tool</Button>
               </Link>
-              <Link href="/matches">
+              {/* <Link href="/matches">
                 <Button variant="ghost" className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-300 hover:scale-105">Matches</Button>
-              </Link>
+              </Link> */}
               <Link href="/dashboard">
                 <Button variant="ghost" className="bg-gradient-to-r from-violet-500 to-purple-600 text-white hover:from-violet-600 hover:to-purple-700 font-medium border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
                   Dashboard
@@ -467,21 +467,21 @@ export default function DashboardPage() {
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
                   {/* Matches and Players Buttons */}
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
-                    <Button 
+                    {/* <Button 
                       variant="outline" 
                       className="w-full sm:w-auto bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 text-blue-700 hover:from-blue-100 hover:to-indigo-100 hover:border-blue-300 hover:text-blue-800 transition-all duration-300 hover:scale-105 shadow-md"
                       onClick={() => router.push('/matches')}
                     >
                       <Play className="w-4 h-4 mr-2" />
                       View All Matches
-                    </Button>
+                    </Button> */}
                     <Button 
                       variant="outline" 
                       className="w-full sm:w-auto bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-700 hover:from-green-100 hover:to-emerald-100 hover:border-green-300 hover:text-green-800 transition-all duration-300 hover:scale-105 shadow-md"
                       onClick={() => router.push('/players')}
                     >
                       <Users className="w-4 h-4 mr-2" />
-                      Players Raid Analysis
+                      Players Videos
                     </Button>
                   </div>
                   
