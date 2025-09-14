@@ -58,41 +58,41 @@ export default function AboutPage() {
     { number: "5+", label: "Core Features", icon: Zap }
   ]
 
-  const teamMembers = [
-    {
-      name: "Srikanth Viswanathan",
-      role: "Founder & CEO",
-      image: "/team/rajesh.jpg",
-      description: "Former Kabaddi player with 15+ years of experience in sports analytics and AI.",
-      social: {
-        linkedin: "#",
-        twitter: "#",
-        email: "rajesh@kabaddiguru.com"
-      }
-    },
-    {
-      name: "Sandeep Kumar",
-      role: "CTO",
-      image: "/team/priya.jpg", 
-      description: "AI/ML expert with expertise in sports data analysis and machine learning algorithms.",
-      social: {
-        linkedin: "#",
-        github: "#",
-        email: "priya@kabaddiguru.com"
-      }
-    },
-    {
-      name: "Amit Singh",
-      role: "Lead Data Scientist",
-      image: "/team/amit.jpg",
-      description: "Data science specialist focused on predictive modeling and performance analytics.",
-      social: {
-        linkedin: "#",
-        github: "#",
-        email: "amit@kabaddiguru.com"
-      }
-    }
-  ]
+  // const teamMembers = [
+  //   {
+  //     name: "Srikanth Viswanathan",
+  //     role: "Founder & CEO",
+  //     image: "/team/rajesh.jpg",
+  //     description: "Former Kabaddi player with 15+ years of experience in sports analytics and AI.",
+  //     social: {
+  //       linkedin: "#",
+  //       twitter: "#",
+  //       email: "rajesh@kabaddiguru.com"
+  //     }
+  //   },
+  //   {
+  //     name: "Sandeep Kumar",
+  //     role: "CTO",
+  //     image: "/team/priya.jpg", 
+  //     description: "AI/ML expert with expertise in sports data analysis and machine learning algorithms.",
+  //     social: {
+  //       linkedin: "#",
+  //       github: "#",
+  //       email: "priya@kabaddiguru.com"
+  //     }
+  //   },
+  //   {
+  //     name: "Amit Singh",
+  //     role: "Lead Data Scientist",
+  //     image: "/team/amit.jpg",
+  //     description: "Data science specialist focused on predictive modeling and performance analytics.",
+  //     social: {
+  //       linkedin: "#",
+  //       github: "#",
+  //       email: "amit@kabaddiguru.com"
+  //     }
+  //   }
+  // ]
 
 
 
@@ -558,73 +558,77 @@ export default function AboutPage() {
                 </div>
               </CardContent>
             </Card>
+{/* Team Section 
+<div className="mb-12 sm:mb-16 lg:mb-20">
+  <div className="text-center mb-8 sm:mb-12">
+    <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+      Meet Our <span className="bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">Amazing Team</span>
+    </h2>
+    <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
+      The passionate individuals behind KabaddiGuru, working tirelessly to revolutionize sports analytics.
+    </p>
+  </div>
+  
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+    {teamMembers.map((member, index) => (
+      <Card key={index} className="border-0 shadow-lg bg-gradient-to-br from-white via-orange-50/30 to-red-50/30 backdrop-blur-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 group overflow-hidden hover:from-white hover:via-orange-100/50 hover:to-red-100/50">
+        <CardContent className="p-0">
 
-            {/* Team Section */}
-            <div className="mb-12 sm:mb-16 lg:mb-20">
-              <div className="text-center mb-8 sm:mb-12">
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-                  Meet Our <span className="bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">Amazing Team</span>
-                </h2>
-                <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
-                  The passionate individuals behind KabaddiGuru, working tirelessly to revolutionize sports analytics.
-                </p>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                {teamMembers.map((member, index) => (
-                  <Card key={index} className="border-0 shadow-lg bg-gradient-to-br from-white via-orange-50/30 to-red-50/30 backdrop-blur-sm hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 group overflow-hidden hover:from-white hover:via-orange-100/50 hover:to-red-100/50">
-                    <CardContent className="p-0">
-                      {/* Team Member Image */}
-                      <div className="relative h-48 sm:h-56 overflow-hidden">
-                        <img 
-                          src={member.image} 
-                          alt={member.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-red-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      </div>
-                      
-                      {/* Team Member Info */}
-                      <div className="p-6">
-                        <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 group-hover:text-orange-600 transition-colors duration-300">
-                          {member.name}
-                        </h3>
-                        {/* <p className="text-sm sm:text-base text-orange-600 font-medium mb-3">
-                          {member.role}
-                        </p>
-                        <p className="text-sm text-gray-600 leading-relaxed mb-4">
-                          {member.description}
-                        </p>
-                        
-                        <div className="flex justify-center space-x-3">
-                          {member.social.linkedin && (
-                            <a href={member.social.linkedin} className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors duration-200">
-                              <Linkedin className="w-4 h-4" />
-                            </a>
-                          )}
-                          {member.social.github && (
-                            <a href={member.social.github} className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center text-white hover:bg-gray-900 transition-colors duration-200">
-                              <Github className="w-4 h-4" />
-                            </a>
-                          )}
-                          {member.social.twitter && (
-                            <a href={member.social.twitter} className="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center text-white hover:bg-blue-500 transition-colors duration-200">
-                              <Twitter className="w-4 h-4" />
-                            </a>
-                          )}
-                          {member.social.email && (
-                            <a href={`mailto:${member.social.email}`} className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white hover:bg-orange-600 transition-colors duration-200">
-                              <Mail className="w-4 h-4" />
-                            </a>
-                          )}
-                        </div> */}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+
+
+          <div className="relative h-48 sm:h-56 overflow-hidden">
+            <img 
+              src={member.image} 
+              alt={member.name}
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-red-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          </div>
+          
+
+
+          
+          <div className="p-6">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 group-hover:text-orange-600 transition-colors duration-300">
+              {member.name}
+            </h3>
+            <p className="text-sm sm:text-base text-orange-600 font-medium mb-3">
+              {member.role}
+            </p>
+            <p className="text-sm text-gray-600 leading-relaxed mb-4">
+              {member.description}
+            </p>
+            
+            <div className="flex justify-center space-x-3">
+              {member.social.linkedin && (
+                <a href={member.social.linkedin} className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors duration-200">
+                  <Linkedin className="w-4 h-4" />
+                </a>
+              )}
+              {member.social.github && (
+                <a href={member.social.github} className="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center text-white hover:bg-gray-900 transition-colors duration-200">
+                  <Github className="w-4 h-4" />
+                </a>
+              )}
+              {member.social.twitter && (
+                <a href={member.social.twitter} className="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center text-white hover:bg-blue-500 transition-colors duration-200">
+                  <Twitter className="w-4 h-4" />
+                </a>
+              )}
+              {member.social.email && (
+                <a href={`mailto:${member.social.email}`} className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white hover:bg-orange-600 transition-colors duration-200">
+                  <Mail className="w-4 h-4" />
+                </a>
+              )}
             </div>
+          </div>
+        </CardContent>
+      </Card>
+    ))}
+  </div>
+</div> 
+*/}
 
 
             {/* Enhanced CTA Section */}
