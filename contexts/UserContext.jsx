@@ -15,17 +15,22 @@ export function UserProvider({ children }) {
 
   useEffect(() => {
     // Check for existing token and user data on app load
-    const storedToken = localStorage.getItem("token")
-    const storedUser = localStorage.getItem("user")
-    
-    if (storedToken && storedUser) {
+    // Only run on client side to avoid hydration issues
+    if (typeof window !== 'undefined') {
       try {
-        setToken(storedToken)
-        setUser(JSON.parse(storedUser))
+        const storedToken = localStorage.getItem("token")
+        const storedUser = localStorage.getItem("user")
+        
+        if (storedToken && storedUser) {
+          setToken(storedToken)
+          setUser(JSON.parse(storedUser))
+        }
       } catch (error) {
         console.error("Error parsing stored user data:", error)
-        localStorage.removeItem("token")
-        localStorage.removeItem("user")
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem("token")
+          localStorage.removeItem("user")
+        }
       }
     }
     
@@ -52,8 +57,10 @@ export function UserProvider({ children }) {
   const login = (userData, userToken) => {
     setUser(userData)
     setToken(userToken)
-    localStorage.setItem("token", userToken)
-    localStorage.setItem("user", JSON.stringify(userData))
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("token", userToken)
+      localStorage.setItem("user", JSON.stringify(userData))
+    }
     // Chat limits will be checked automatically by the token effect
   }
 
@@ -62,13 +69,17 @@ export function UserProvider({ children }) {
     setToken(null)
     setChatLimitInfo(null)
     setShowSubscriptionModal(false)
-    localStorage.removeItem("token")
-    localStorage.removeItem("user")
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem("token")
+      localStorage.removeItem("user")
+    }
   }
 
   const updateUser = (updatedUserData) => {
     setUser(updatedUserData)
-    localStorage.setItem("user", JSON.stringify(updatedUserData))
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("user", JSON.stringify(updatedUserData))
+    }
   }
 
   const checkChatLimit = async () => {

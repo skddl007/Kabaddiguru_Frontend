@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -23,7 +24,9 @@ import {
   File,
   MoreHorizontal,
   Wifi,
-  WifiOff
+  WifiOff,
+  Menu,
+  LayoutDashboard
 } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import Link from "next/link"
@@ -126,6 +129,7 @@ export default function ChatPage() {
   const [showFeedbackForm, setShowFeedbackForm] = useState({}) // Track feedback form visibility
   const [feedbackText, setFeedbackText] = useState({}) // Track feedback text for each message
   const [sidebarOpen, setSidebarOpen] = useState(false) // Track sidebar open state
+  const [sidebarHidden, setSidebarHidden] = useState(false) // Track sidebar hide/show state
   const [videoPlayerOpen, setVideoPlayerOpen] = useState(false) // Track video player modal state
   const [selectedVideoData, setSelectedVideoData] = useState(null) // Track selected video data
   const messagesEndRef = useRef(null)
@@ -624,6 +628,134 @@ export default function ChatPage() {
     const formatContent = (text) => {
       if (!text) return ""
       
+      // Card styles based on raid result (mirrors Players page)
+      const getCardStyles = (resultText) => {
+        const r = (resultText || '').toLowerCase()
+        if (r === 'successful') {
+          return {
+            badge: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+            border: 'border-emerald-100',
+            ring: 'hover:ring-emerald-300',
+            header: 'text-emerald-700',
+            bg: 'bg-emerald-50',
+            button: 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm',
+            overlayBg: 'bg-emerald-600/40'
+          }
+        }
+        if (r === 'unsuccessful' || r === 'failed/unsuccessful' || r === 'failure' || r === 'failed') {
+          return {
+            badge: 'bg-rose-100 text-rose-700 border-rose-200',
+            border: 'border-rose-100',
+            ring: 'hover:ring-rose-300',
+            header: 'text-rose-700',
+            bg: 'bg-rose-50',
+            button: 'bg-rose-600 hover:bg-rose-700 text-white shadow-sm',
+            overlayBg: 'bg-rose-600/40'
+          }
+        }
+        if (r === 'empty') {
+          return {
+            badge: 'bg-sky-100 text-sky-700 border-sky-200',
+            border: 'border-sky-100',
+            ring: 'hover:ring-sky-300',
+            header: 'text-sky-700',
+            bg: 'bg-sky-50',
+            button: 'bg-sky-600 hover:bg-sky-700 text-white shadow-sm',
+            overlayBg: 'bg-sky-600/40'
+          }
+        }
+        return {
+          badge: 'bg-slate-100 text-slate-700 border-slate-200',
+          border: 'border-slate-100',
+          ring: 'hover:ring-slate-300',
+          header: 'text-slate-700',
+          bg: 'bg-white',
+          button: 'bg-slate-800 hover:bg-slate-900 text-white shadow-sm',
+          overlayBg: 'bg-black/40'
+        }
+      }
+
+      // Build cards HTML when a raids table is detected
+      const buildRaidsCardsHtml = (headers, rows) => {
+        // Identify column indices
+        const findIndex = (preds) => headers.findIndex(h => preds.some(p => h.toLowerCase().includes(p)))
+        const idxPlayer = findIndex(['attacking player', 'player', 'raider', 'tackled raider', 'tackler'])
+        const idxOutcome = findIndex(['raid outcome', 'result', 'outcome', 'points'])
+        const idxPoints = findIndex(['points', 'points scored', 'score'])
+        const idxVideo = findIndex(['video', 'raid video', 'watch video'])
+        const idxTeam = findIndex(['team', 'attacking team', 'team code'])
+        const idxRaidNo = findIndex(['raid no', 'raid number', 'raid_no', 'raid'])
+
+        // If we don't have at least player, fallback to table
+        if (idxPlayer === -1) return null
+
+        // Check if any row has video available - if no videos, fallback to table
+        let hasAnyVideo = false
+        if (idxVideo !== -1) {
+          hasAnyVideo = rows.some(row => {
+            const cell = row[idxVideo] || ''
+            const markdownLinkMatch = cell.match(/\[Watch Video\]\((https?:\/\/[^\)]+)\)/)
+            const directUrlMatch = cell.match(/https?:\/\/[^\s\)]+/)
+            return (markdownLinkMatch && markdownLinkMatch[1]) || (directUrlMatch && (cell.includes('.mp4') || cell.includes('video') || cell.includes('vod.')))
+          })
+        }
+        
+        // If no videos are available, fallback to table display
+        if (!hasAnyVideo) return null
+
+        let html = '<div class="my-1.5 grid grid-cols-4 gap-1.5 max-h-96 overflow-y-auto">'
+
+        rows.forEach((row, index) => {
+          const player = cleanPlayerName(row[idxPlayer] || '')
+          const outcome = idxOutcome !== -1 ? (row[idxOutcome] || '') : 'Tackled'
+          const points = idxPoints !== -1 ? (row[idxPoints] || '0') : '1'
+          const teamCode = idxTeam !== -1 ? (row[idxTeam] || '') : ''
+          const raidNo = idxRaidNo !== -1 ? (row[idxRaidNo] || '') : ''
+
+          // Extract video URL if present in video cell
+          let videoUrl = ''
+          if (idxVideo !== -1) {
+            const cell = row[idxVideo] || ''
+            const markdownLinkMatch = cell.match(/\[Watch Video\]\((https?:\/\/[^\)]+)\)/)
+            const directUrlMatch = cell.match(/https?:\/\/[^\s\)]+/)
+            if (markdownLinkMatch) videoUrl = cleanVideoUrl(markdownLinkMatch[1])
+            else if (directUrlMatch && (cell.includes('.mp4') || cell.includes('video') || cell.includes('vod.'))) videoUrl = cleanVideoUrl(directUrlMatch[0])
+          }
+
+          const styles = getCardStyles(outcome)
+          const btnId = `video-card-btn-${Date.now()}-${index}`
+
+          html += `
+            <div class="group relative border ${styles.border} ${styles.bg} ${styles.ring} hover:ring-2 rounded-sm overflow-hidden h-20">
+              <div class="p-1 space-y-0.5 h-full flex flex-col justify-between">
+                <div class="flex items-center justify-between min-w-0">
+                  <div class="flex items-center gap-1 min-w-0">
+                    <span class="px-1 py-0.5 text-[8px] rounded border bg-slate-50 text-slate-700 border-slate-200 shrink-0">Raid ${raidNo || '-'}</span>
+                    <span class="truncate text-[10px] font-semibold text-gray-900">${player}</span>
+                  </div>
+                  <span class="px-1 py-0.5 rounded-full text-[8px] font-semibold bg-white/70 text-slate-900 border border-white/80 shrink-0">${points} pts</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-1 min-w-0">
+                    <span class="px-1 py-0.5 rounded text-[8px] border ${styles.badge} shrink-0">${outcome || '-'}</span>
+                    <span class="truncate text-[9px] ${styles.header} capitalize">${teamCode || ''}</span>
+                  </div>
+                  ${videoUrl ? `<button id="${btnId}" class="${styles.button} h-4 px-1 rounded text-[8px] font-medium shrink-0">▶</button>` : ''}
+                </div>
+              </div>
+              ${videoUrl ? `<button class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center ${styles.overlayBg}" onclick="window.handleVideoClick && window.handleVideoClick('${videoUrl}', '${player}', '${teamCode}', '${raidNo}', 'Raid Video')" aria-label="Play video">
+                <div class="w-6 h-6 rounded-full bg-white/80 backdrop-blur flex items-center justify-center">
+                  <span class="text-[10px]">▶</span>
+                </div>
+              </button>` : ''}
+            </div>
+          `
+        })
+
+        html += '</div>'
+        return html
+      }
+
       // Handle tables with robust parsing
       // First, try to handle tab-separated tables (like the user's example)
       const tabTableRegex = /((?:[^\n]+\t[^\n]+(?:\n|$)){2,})/g
@@ -654,59 +786,18 @@ export default function ChatPage() {
           // Filter out Raid ID column from headers and rows
           const filteredHeaders = headerCells.filter((_, index) => index !== raidIdIndex)
           const filteredRows = dataRows.map(row => row.filter((_, index) => index !== raidIdIndex))
-          
-          let tableHtml = '<div class="overflow-x-auto my-4"><table class="min-w-full border border-gray-200 rounded-lg">'
-          tableHtml += '<thead class="bg-gray-50"><tr>'
-          filteredHeaders.forEach(header => {
-            tableHtml += `<th class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b">${header}</th>`
-          })
-          tableHtml += '</tr></thead><tbody>'
-          
-          filteredRows.forEach((row, index) => {
-            tableHtml += `<tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">`
-            row.forEach((cell, cellIndex) => {
-              const header = filteredHeaders[cellIndex]
-              
-              // Clean player names in Attacking Player column
-              if (header && (header.toLowerCase().includes('attacking player') || header.toLowerCase().includes('player'))) {
-                cell = cleanPlayerName(cell)
-              }
-              
-              // Check for markdown links [Watch Video](url) or direct URLs
-              const markdownLinkMatch = cell.match(/\[Watch Video\]\((https?:\/\/[^\)]+)\)/)
-              const directUrlMatch = cell.match(/https?:\/\/[^\s\)]+/)
-              
-              if (markdownLinkMatch || (directUrlMatch && (cell.includes('.mp4') || cell.includes('video') || cell.includes('vod.')))) {
-                // Extract video URL from markdown link or direct URL
-                let videoUrl = markdownLinkMatch ? markdownLinkMatch[1] : directUrlMatch[0]
-                
-                // Clean the video URL (handle double encoding)
-                videoUrl = cleanVideoUrl(videoUrl)
-                const buttonId = `video-btn-${Date.now()}-${index}-${cellIndex}`
-                
-                // Get player name from the first column (assuming it's the player column)
-                const playerName = row[0] || ''
-                const teamCode = row[1] || ''
-                const raidNo = row[2] || ''
-                
-                tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">
-                  <button 
-                    id="${buttonId}"
-                    class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
-                    onclick="window.handleVideoClick && window.handleVideoClick('${videoUrl}', '${playerName}', '${teamCode}', '${raidNo}', '${header || ''}')"
-                  >
-                    🎥 Watch Video
-                  </button>
-                </td>`
-              } else {
-                tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">${cell}</td>`
-              }
-            })
-            tableHtml += '</tr>'
-          })
-          
-          tableHtml += '</tbody></table></div>'
-          return tableHtml
+          // Try to build cards first; fallback to table if not a raids table
+          const cards = buildRaidsCardsHtml(filteredHeaders, filteredRows)
+          if (cards) return cards
+
+          // Fallback: keep original table rendering
+          let html = '<div class="overflow-x-auto my-4"><table class="min-w-full border border-gray-200 rounded-lg">'
+          html += '<thead class="bg-gray-50"><tr>'
+          filteredHeaders.forEach(header => { html += `<th class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b">${header}</th>` })
+          html += '</tr></thead><tbody>'
+          filteredRows.forEach((row, index) => { html += `<tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">`; row.forEach((cell) => { html += `<td class="px-4 py-2 text-sm text-gray-700 border-b">${cell}</td>` }); html += '</tr>' })
+          html += '</tbody></table></div>'
+          return html
         } catch (error) {
           console.error('Tab table parsing error:', error)
           return match
@@ -746,58 +837,17 @@ export default function ChatPage() {
           const filteredHeaders = headerCells.filter((_, index) => index !== raidIdIndex)
           const filteredRows = dataRows.map(row => row.filter((_, index) => index !== raidIdIndex))
           
-          let tableHtml = '<div class="overflow-x-auto my-4"><table class="min-w-full border border-gray-200 rounded-lg">'
-          tableHtml += '<thead class="bg-gray-50"><tr>'
-          filteredHeaders.forEach(header => {
-            tableHtml += `<th class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b">${header}</th>`
-          })
-          tableHtml += '</tr></thead><tbody>'
-          
-          filteredRows.forEach((row, index) => {
-            tableHtml += `<tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">`
-            row.forEach((cell, cellIndex) => {
-              const header = filteredHeaders[cellIndex]
-              
-              // Clean player names in Attacking Player column
-              if (header && (header.toLowerCase().includes('attacking player') || header.toLowerCase().includes('player'))) {
-                cell = cleanPlayerName(cell)
-              }
-              
-              // Check for markdown links [Watch Video](url) or direct URLs
-              const markdownLinkMatch = cell.match(/\[Watch Video\]\((https?:\/\/[^\)]+)\)/)
-              const directUrlMatch = cell.match(/https?:\/\/[^\s\)]+/)
-              
-              if (markdownLinkMatch || (directUrlMatch && (cell.includes('.mp4') || cell.includes('video') || cell.includes('vod.')))) {
-                // Extract video URL from markdown link or direct URL
-                let videoUrl = markdownLinkMatch ? markdownLinkMatch[1] : directUrlMatch[0]
-                
-                // Clean the video URL (handle double encoding)
-                videoUrl = cleanVideoUrl(videoUrl)
-                const buttonId = `video-btn-${Date.now()}-${index}-${cellIndex}`
-                
-                // Get player name from the first column (assuming it's the player column)
-                const playerName = row[0] || ''
-                const teamCode = row[1] || ''
-                const raidNo = row[2] || ''
-                
-                tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">
-                  <button 
-                    id="${buttonId}"
-                    class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
-                    onclick="window.handleVideoClick && window.handleVideoClick('${videoUrl}', '${playerName}', '${teamCode}', '${raidNo}', '${header || ''}')"
-                  >
-                    🎥 Watch Video
-                  </button>
-                </td>`
-              } else {
-                tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">${cell}</td>`
-              }
-            })
-            tableHtml += '</tr>'
-          })
-          
-          tableHtml += '</tbody></table></div>'
-          return tableHtml
+          // Try to build cards first; fallback to table if not a raids table
+          const cards = buildRaidsCardsHtml(filteredHeaders, filteredRows)
+          if (cards) return cards
+
+          let html = '<div class="overflow-x-auto my-4"><table class="min-w-full border border-gray-200 rounded-lg">'
+          html += '<thead class="bg-gray-50"><tr>'
+          filteredHeaders.forEach(header => { html += `<th class=\"px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b\">${header}</th>` })
+          html += '</tr></thead><tbody>'
+          filteredRows.forEach((row, index) => { html += `<tr class=\"${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}\">`; row.forEach((cell) => { html += `<td class=\"px-4 py-2 text-sm text-gray-700 border-b\">${cell}</td>` }); html += '</tr>' })
+          html += '</tbody></table></div>'
+          return html
         } catch (error) {
           console.error('Space table parsing error:', error)
           return match
@@ -830,53 +880,17 @@ export default function ChatPage() {
           const filteredHeaders = headerCells.filter((_, index) => index !== raidIdIndex)
           const filteredRows = rowsArray.map(row => row.filter((_, index) => index !== raidIdIndex))
           
-          let tableHtml = '<div class="overflow-x-auto my-4"><table class="min-w-full border border-gray-200 rounded-lg">'
-          tableHtml += '<thead class="bg-gray-50"><tr>'
-          filteredHeaders.forEach(header => {
-            tableHtml += `<th class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b">${header}</th>`
-          })
-          tableHtml += '</tr></thead><tbody>'
-          
-          filteredRows.forEach((row, index) => {
-            tableHtml += `<tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">`
-            row.forEach((cell, cellIndex) => {
-              const header = filteredHeaders[cellIndex]
-              
-              // Clean player names in Attacking Player column
-              if (header && (header.toLowerCase().includes('attacking player') || header.toLowerCase().includes('player'))) {
-                cell = cleanPlayerName(cell)
-              }
-              
-              // Handle video links - replace with Watch Video button
-              // Check for markdown links [Watch Video](url) or direct URLs
-              const markdownLinkMatch = cell.match(/\[Watch Video\]\((https?:\/\/[^\)]+)\)/)
-              const directUrlMatch = cell.match(/https?:\/\/[^\s\)]+/)
-              
-              if (markdownLinkMatch || (directUrlMatch && (cell.includes('.mp4') || cell.includes('video') || cell.includes('vod.')))) {
-                // Extract video URL from markdown link or direct URL
-                let videoUrl = markdownLinkMatch ? markdownLinkMatch[1] : directUrlMatch[0]
-                
-                // Clean the video URL (handle double encoding)
-                videoUrl = cleanVideoUrl(videoUrl)
-                const buttonId = `video-btn-${Date.now()}-${index}-${cellIndex}`
-                tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">
-                  <button 
-                    id="${buttonId}"
-                    class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
-                    onclick="window.handleVideoClick && window.handleVideoClick('${videoUrl}', '${row[0] || ''}', '${row[1] || ''}', '${row[2] || ''}', '${header || ''}')"
-                  >
-                    🎥 Watch Video
-                  </button>
-                </td>`
-              } else {
-                tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">${cell}</td>`
-              }
-            })
-            tableHtml += '</tr>'
-          })
-          
-          tableHtml += '</tbody></table></div>'
-          return tableHtml
+          // Try to build cards first; fallback to table if not a raids table
+          const cards = buildRaidsCardsHtml(filteredHeaders, filteredRows)
+          if (cards) return cards
+
+          let html = '<div class="overflow-x-auto my-4"><table class="min-w-full border border-gray-200 rounded-lg">'
+          html += '<thead class="bg-gray-50"><tr>'
+          filteredHeaders.forEach(header => { html += `<th class=\"px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b\">${header}</th>` })
+          html += '</tr></thead><tbody>'
+          filteredRows.forEach((row, index) => { html += `<tr class=\"${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}\">`; row.forEach((cell) => { html += `<td class=\"px-4 py-2 text-sm text-gray-700 border-b\">${cell}</td>` }); html += '</tr>' })
+          html += '</tbody></table></div>'
+          return html
         } catch (error) {
           console.error('Table parsing error:', error)
           return match // Return original if parsing fails
@@ -913,53 +927,17 @@ export default function ChatPage() {
           const filteredHeaders = headerCells.filter((_, index) => index !== raidIdIndex)
           const filteredRows = dataRows.map(row => row.filter((_, index) => index !== raidIdIndex))
           
-          let tableHtml = '<div class="overflow-x-auto my-4"><table class="min-w-full border border-gray-200 rounded-lg">'
-          tableHtml += '<thead class="bg-gray-50"><tr>'
-          filteredHeaders.forEach(header => {
-            tableHtml += `<th class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b">${header}</th>`
-          })
-          tableHtml += '</tr></thead><tbody>'
-          
-          filteredRows.forEach((row, index) => {
-            tableHtml += `<tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">`
-            row.forEach((cell, cellIndex) => {
-              const header = filteredHeaders[cellIndex]
-              
-              // Clean player names in Attacking Player column
-              if (header && (header.toLowerCase().includes('attacking player') || header.toLowerCase().includes('player'))) {
-                cell = cleanPlayerName(cell)
-              }
-              
-              // Handle video links - replace with Watch Video button
-              // Check for markdown links [Watch Video](url) or direct URLs
-              const markdownLinkMatch = cell.match(/\[Watch Video\]\((https?:\/\/[^\)]+)\)/)
-              const directUrlMatch = cell.match(/https?:\/\/[^\s\)]+/)
-              
-              if (markdownLinkMatch || (directUrlMatch && (cell.includes('.mp4') || cell.includes('video') || cell.includes('vod.')))) {
-                // Extract video URL from markdown link or direct URL
-                let videoUrl = markdownLinkMatch ? markdownLinkMatch[1] : directUrlMatch[0]
-                
-                // Clean the video URL (handle double encoding)
-                videoUrl = cleanVideoUrl(videoUrl)
-                const buttonId = `video-btn-${Date.now()}-${index}-${cellIndex}`
-                tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">
-                  <button 
-                    id="${buttonId}"
-                    class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
-                    onclick="window.handleVideoClick && window.handleVideoClick('${videoUrl}', '${row[0] || ''}', '${row[1] || ''}', '${row[2] || ''}', '${header || ''}')"
-                  >
-                    🎥 Watch Video
-                  </button>
-                </td>`
-              } else {
-                tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">${cell}</td>`
-              }
-            })
-            tableHtml += '</tr>'
-          })
-          
-          tableHtml += '</tbody></table></div>'
-          return tableHtml
+          // Try to build cards first; fallback to table if not a raids table
+          const cards = buildRaidsCardsHtml(filteredHeaders, filteredRows)
+          if (cards) return cards
+
+          let html = '<div class="overflow-x-auto my-4"><table class="min-w-full border border-gray-200 rounded-lg">'
+          html += '<thead class="bg-gray-50"><tr>'
+          filteredHeaders.forEach(header => { html += `<th class=\"px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b\">${header}</th>` })
+          html += '</tr></thead><tbody>'
+          filteredRows.forEach((row, index) => { html += `<tr class=\"${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}\">`; row.forEach((cell) => { html += `<td class=\"px-4 py-2 text-sm text-gray-700 border-b\">${cell}</td>` }); html += '</tr>' })
+          html += '</tbody></table></div>'
+          return html
         } catch (error) {
           console.error('Alternative table parsing error:', error)
           return match
@@ -1005,53 +983,17 @@ export default function ChatPage() {
           const filteredHeaders = headerCells.filter((_, index) => index !== raidIdIndex)
           const filteredRows = dataRows.map(row => row.filter((_, index) => index !== raidIdIndex))
           
-          let tableHtml = '<div class="overflow-x-auto my-4"><table class="min-w-full border border-gray-200 rounded-lg">'
-          tableHtml += '<thead class="bg-gray-50"><tr>'
-          filteredHeaders.forEach(header => {
-            tableHtml += `<th class="px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b">${header}</th>`
-          })
-          tableHtml += '</tr></thead><tbody>'
-          
-          filteredRows.forEach((row, index) => {
-            tableHtml += `<tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">`
-            row.forEach((cell, cellIndex) => {
-              const header = filteredHeaders[cellIndex]
-              
-              // Clean player names in Attacking Player column
-              if (header && (header.toLowerCase().includes('attacking player') || header.toLowerCase().includes('player'))) {
-                cell = cleanPlayerName(cell)
-              }
-              
-              // Handle video links - replace with Watch Video button
-              // Check for markdown links [Watch Video](url) or direct URLs
-              const markdownLinkMatch = cell.match(/\[Watch Video\]\((https?:\/\/[^\)]+)\)/)
-              const directUrlMatch = cell.match(/https?:\/\/[^\s\)]+/)
-              
-              if (markdownLinkMatch || (directUrlMatch && (cell.includes('.mp4') || cell.includes('video') || cell.includes('vod.')))) {
-                // Extract video URL from markdown link or direct URL
-                let videoUrl = markdownLinkMatch ? markdownLinkMatch[1] : directUrlMatch[0]
-                
-                // Clean the video URL (handle double encoding)
-                videoUrl = cleanVideoUrl(videoUrl)
-                const buttonId = `video-btn-${Date.now()}-${index}-${cellIndex}`
-                tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">
-                  <button 
-                    id="${buttonId}"
-                    class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-105"
-                    onclick="window.handleVideoClick && window.handleVideoClick('${videoUrl}', '${row[0] || ''}', '${row[1] || ''}', '${row[2] || ''}', '${header || ''}')"
-                  >
-                    🎥 Watch Video
-                  </button>
-                </td>`
-              } else {
-                tableHtml += `<td class="px-4 py-2 text-sm text-gray-700 border-b">${cell}</td>`
-              }
-            })
-            tableHtml += '</tr>'
-          })
-          
-          tableHtml += '</tbody></table></div>'
-          return tableHtml
+          // Try to build cards first; fallback to table if not a raids table
+          const cards = buildRaidsCardsHtml(filteredHeaders, filteredRows)
+          if (cards) return cards
+
+          let html = '<div class="overflow-x-auto my-4"><table class="min-w-full border border-gray-200 rounded-lg">'
+          html += '<thead class="bg-gray-50"><tr>'
+          filteredHeaders.forEach(header => { html += `<th class=\"px-4 py-2 text-left text-sm font-semibold text-gray-900 border-b\">${header}</th>` })
+          html += '</tr></thead><tbody>'
+          filteredRows.forEach((row, index) => { html += `<tr class=\"${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}\">`; row.forEach((cell) => { html += `<td class=\"px-4 py-2 text-sm text-gray-700 border-b\">${cell}</td>` }); html += '</tr>' })
+          html += '</tbody></table></div>'
+          return html
         } catch (error) {
           console.error('General table parsing error:', error)
           return match
@@ -1092,10 +1034,12 @@ export default function ChatPage() {
       )}
       
       {/* Sidebar */}
-      <div className={`bg-white border-r border-gray-200 flex flex-col ${
-        sidebarOpen 
-          ? 'fixed inset-y-0 left-0 z-50 w-80 lg:relative lg:z-auto lg:w-80' 
-          : 'hidden lg:flex lg:w-80'
+      <div className={`bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ${
+        sidebarHidden 
+          ? 'hidden' 
+          : sidebarOpen 
+            ? 'fixed inset-y-0 left-0 z-50 w-64 lg:relative lg:z-auto lg:w-64' 
+            : 'hidden lg:flex lg:w-64'
       }`}>
         <div className="border-b border-gray-200 p-4">
           <div className="flex items-center justify-between">
@@ -1122,6 +1066,15 @@ export default function ChatPage() {
               <Button
                 variant="ghost"
                 size="sm"
+                onClick={() => setSidebarHidden(true)}
+                className="text-gray-600 hover:text-gray-900 hidden lg:flex"
+                title="Hide sidebar"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setSidebarOpen(false)}
                 className="text-gray-600 hover:text-gray-900 lg:hidden"
               >
@@ -1134,19 +1087,19 @@ export default function ChatPage() {
         <div className="flex-1 overflow-y-auto p-2">
           <div className="mb-4">
             <nav className="space-y-1">
-              <Link href="/" className="flex items-center space-x-2 px-2 py-2 text-sm rounded-md hover:bg-gray-100">
+              <Link href="/" className="flex items-center space-x-2 px-2 py-2 text-sm rounded-lg hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 text-gray-700 hover:text-green-700 transition-all duration-300 hover:scale-105 hover:shadow-sm">
                 <Home className="w-4 h-4" />
                 <span>Home</span>
               </Link>
-              {/* <Link href="/dashboard" className="flex items-center space-x-2 px-2 py-2 text-sm rounded-md hover:bg-gray-100">
-                <BarChart3 className="w-4 h-4" />
+              <Link href="/dashboard" className="flex items-center space-x-2 px-2 py-2 text-sm rounded-lg hover:bg-gradient-to-r hover:from-violet-50 hover:to-purple-50 text-gray-700 hover:text-violet-700 transition-all duration-300 hover:scale-105 hover:shadow-sm">
+                <LayoutDashboard className="w-4 h-4" />
                 <span>Dashboard</span>
-              </Link> */}
-              <Link href="/analytics" className="flex items-center space-x-2 px-2 py-2 text-sm rounded-md hover:bg-gray-100">
+              </Link>
+              <Link href="/analytics" className="flex items-center space-x-2 px-2 py-2 text-sm rounded-lg hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 text-gray-700 hover:text-blue-700 transition-all duration-300 hover:scale-105 hover:shadow-sm">
                 <BarChart3 className="w-4 h-4" />
                 <span>Analytics Tool</span>
               </Link>
-              {/* <Link href="/upload" className="flex items-center space-x-2 px-2 py-2 text-sm rounded-md hover:bg-gray-100">
+              {/* <Link href="/upload" className="flex items-center space-x-2 px-2 py-2 text-sm rounded-lg hover:bg-gradient-to-r hover:from-orange-50 hover:to-red-50 text-gray-700 hover:text-orange-700 transition-all duration-300 hover:scale-105 hover:shadow-sm">
                 <Upload className="w-4 h-4" />
                 <span>Upload Data</span>
               </Link> */}
@@ -1206,63 +1159,63 @@ export default function ChatPage() {
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="border-b border-gray-200 bg-white p-4 flex-shrink-0">
-                        <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
+        {/* Header - only show when sidebar is hidden */}
+        {sidebarHidden && (
+          <header className="border-b border-white/20 bg-white/80 backdrop-blur-md shadow-lg">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-center h-14">
+                <div className="flex items-center space-x-3">
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setSidebarOpen(true)}
-                    className="lg:hidden"
+                    onClick={() => setSidebarHidden(false)}
+                    className="text-gray-600 hover:text-violet-600 hover:bg-violet-50 p-2 transition-all duration-300 hover:scale-105"
+                    title="Show sidebar"
                   >
-                    <MessageSquare className="w-4 h-4" />
+                    <Menu className="w-4 h-4" />
                   </Button>
-                  <div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-8 h-8 rounded-lg overflow-hidden">
-                        <img 
-                          src="/KabaddiGuru Logo.jpeg" 
-                          alt="KabaddiGuru Logo" 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-lg lg:text-xl font-semibold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                          KabaddiGuru
-                        </span>
-                        <span className="text-xs text-gray-600 font-medium">
-                          Chat
-                        </span>
-                      </div>
-                    </div>
+                  <div className="w-8 h-8 rounded-lg overflow-hidden shadow-lg border-2 border-white/20">
+                    <img 
+                      src="/KabaddiGuru Logo.jpeg" 
+                      alt="KabaddiGuru Logo" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-lg font-bold bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                      KabaddiGuru
+                    </span>
+                    <span className="text-xs text-gray-500 font-medium">
+                      AI Chat Assistant
+                    </span>
                   </div>
                 </div>
-                <div className="flex items-center space-x-1 sm:space-x-2">
-                  {currentChatId && messages.length > 1 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleGenerateSummary}
-                      disabled={isGeneratingSummary || isLimitReached || summaryCount >= maxSummaries}
-                      className={`text-xs ${isLimitReached || summaryCount >= maxSummaries ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      <File className="w-3 h-3 sm:mr-1" />
-                      <span className="hidden sm:inline">
-                        {isGeneratingSummary ? "Generating..." : `Summary (${summaryCount}/${maxSummaries})`}
-                      </span>
-                      <span className="sm:hidden">
-                        {isGeneratingSummary ? "..." : `${summaryCount}/${maxSummaries}`}
-                      </span>
-                    </Button>
-                  )}
+                
+                {/* Desktop Navigation */}
+                <div className="hidden md:flex items-center space-x-4">
+                  <Link href="/" className="flex items-center space-x-1 px-3 py-1.5 text-sm rounded-lg hover:bg-green-50 text-gray-600 hover:text-green-600 transition-all duration-300 hover:scale-105">
+                    <Home className="w-4 h-4" />
+                    <span>Home</span>
+                  </Link>
+                  <Link href="/dashboard" className="flex items-center space-x-1 px-3 py-1.5 text-sm rounded-lg hover:bg-violet-50 text-gray-600 hover:text-violet-600 transition-all duration-300 hover:scale-105">
+                    <LayoutDashboard className="w-4 h-4" />
+                    <span>Dashboard</span>
+                  </Link>
+                  <Link href="/analytics" className="flex items-center space-x-1 px-3 py-1.5 text-sm rounded-lg hover:bg-blue-50 text-gray-600 hover:text-blue-600 transition-all duration-300 hover:scale-105">
+                    <BarChart3 className="w-4 h-4" />
+                    <span>Analytics</span>
+                  </Link>
+                </div>
+                
+                <div className="flex items-center space-x-2">
                   <Badge 
                     variant="secondary" 
-                    className={`flex items-center space-x-1 ${
+                    className={`flex items-center space-x-1 px-2 py-1 text-xs rounded-full shadow-sm ${
                       connectionStatus === "online" 
-                        ? "bg-green-100 text-green-800" 
+                        ? "bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200/50" 
                         : connectionStatus === "offline"
-                        ? "bg-red-100 text-red-800"
-                        : "bg-yellow-100 text-yellow-800"
+                        ? "bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border border-red-200/50"
+                        : "bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 border border-yellow-200/50"
                     }`}
                   >
                     {connectionStatus === "online" ? (
@@ -1281,7 +1234,36 @@ export default function ChatPage() {
                   </Badge>
                 </div>
               </div>
+            </div>
           </header>
+        )}
+
+        {/* Mobile header - only show on mobile when sidebar is not open */}
+        {!sidebarHidden && (
+          <div className="lg:hidden border-b border-gray-200 bg-white p-3 flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSidebarOpen(true)}
+                className="text-gray-600 hover:text-gray-900"
+              >
+                <MessageSquare className="w-5 h-5" />
+              </Button>
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-lg overflow-hidden">
+                  <img 
+                    src="/KabaddiGuru Logo.jpeg" 
+                    alt="KabaddiGuru Logo" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <span className="font-semibold text-gray-900">KabaddiGuru</span>
+              </div>
+              <div className="w-8"></div>
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto p-4">
           <div className="max-w-6xl mx-auto space-y-4">
@@ -1322,7 +1304,7 @@ export default function ChatPage() {
                   </Avatar>
                 )}
                 
-                <Card className={`w-full max-w-4xl lg:max-w-5xl ${
+                <Card className={`w-full max-w-4xl lg:max-w-5xl relative ${
                   message.role === "user" 
                     ? "bg-gradient-to-r from-orange-500 to-red-500 text-white" 
                     : "bg-white border-gray-200"
@@ -1332,66 +1314,67 @@ export default function ChatPage() {
                       <p className="text-sm lg:text-base leading-relaxed">{message.content}</p>
                     ) : (
                       <div>
+                        {/* SQL Query Toggle Button - positioned in top-right corner */}
+                        {message.sql_query && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleSqlQuery(message.id)}
+                            className={`absolute top-2 right-2 text-xs flex items-center space-x-1 z-10 ${
+                              isLimitReached 
+                                ? 'text-gray-400 cursor-not-allowed' 
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                            }`}
+                            disabled={isLimitReached}
+                          >
+                            <Code className="w-3 h-3" />
+                            <span className="hidden sm:inline">
+                              {expandedSqlQueries.has(message.id) ? "Hide" : "Show"} SQL
+                            </span>
+                            {expandedSqlQueries.has(message.id) ? (
+                              <ChevronUp className="w-3 h-3" />
+                            ) : (
+                              <ChevronDown className="w-3 h-3" />
+                            )}
+                          </Button>
+                        )}
+                        
                         <FormattedResponse content={message.content} />
                         
-                        {/* SQL Query Toggle Button - only show for assistant messages with SQL */}
-                        {message.sql_query && (
+                        {/* SQL Query Display */}
+                        {message.sql_query && expandedSqlQueries.has(message.id) && (
                           <div className="mt-3 pt-3 border-t border-gray-100">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleSqlQuery(message.id)}
-                              className={`text-xs flex items-center space-x-1 ${
-                                isLimitReached 
-                                  ? 'text-gray-400 cursor-not-allowed' 
-                                  : 'text-gray-600 hover:text-gray-900'
-                              }`}
-                              disabled={isLimitReached}
-                            >
-                              <Code className="w-3 h-3" />
-                              <span>
-                                {expandedSqlQueries.has(message.id) ? "Hide" : "Show"} SQL Query
-                              </span>
-                              {expandedSqlQueries.has(message.id) ? (
-                                <ChevronUp className="w-3 h-3" />
-                              ) : (
-                                <ChevronDown className="w-3 h-3" />
+                            <div className="p-3 bg-gray-50 rounded-md border">
+                              <p className="text-xs text-gray-500 mb-2 font-medium">Generated SQL Query:</p>
+                              <pre className="text-xs text-gray-800 whitespace-pre-wrap font-mono bg-white p-2 rounded border overflow-x-auto">
+                                {message.sql_query}
+                              </pre>
+                              {message.response_time && (
+                                <p className="text-xs text-gray-400 mt-2">
+                                  Executed in {typeof message.response_time === 'number' ? message.response_time.toFixed(2) : message.response_time}s
+                                </p>
                               )}
-                            </Button>
-                            
-                            {/* SQL Query Display */}
-                            {expandedSqlQueries.has(message.id) && (
-                              <div className="mt-2 p-3 bg-gray-50 rounded-md border">
-                                <p className="text-xs text-gray-500 mb-2 font-medium">Generated SQL Query:</p>
-                                <pre className="text-xs text-gray-800 whitespace-pre-wrap font-mono bg-white p-2 rounded border overflow-x-auto">
-                                  {message.sql_query}
-                                </pre>
-                                {message.response_time && (
-                                  <p className="text-xs text-gray-400 mt-2">
-                                    Executed in {typeof message.response_time === 'number' ? message.response_time.toFixed(2) : message.response_time}s
-                                  </p>
-                                )}
-                              </div>
-                            )}
+                            </div>
                           </div>
                         )}
                         
-                        {/* Feedback Section - only show for assistant messages */}
-                        {message.role === "assistant" && !message.isError && (
-                          <div className="mt-3 pt-3 border-t border-gray-100">
+                        {/* Compact Feedback Section - only show for assistant messages (excluding initial greeting) */}
+                        {message.role === "assistant" && !message.isError && message.id !== "1" && (
+                          <div className="mt-2 pt-2 border-t border-gray-100">
+                            {/* Main feedback row */}
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-2">
-                                <span className="text-xs text-gray-500">Was this helpful?</span>
+                              <div className="flex items-center space-x-1">
+                                <span className="text-xs text-gray-500">Helpful?</span>
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleFeedback(message.id, 'thumbs_up', message)}
-                                  className={`text-xs p-1 h-6 ${
+                                  className={`p-1 h-6 w-6 ${
                                     feedbackStates[message.id] === 'thumbs_up' 
                                       ? 'text-green-600 bg-green-50' 
                                       : isLimitReached 
                                         ? 'text-gray-400 cursor-not-allowed' 
-                                        : 'text-gray-600 hover:text-green-600'
+                                        : 'text-gray-600 hover:text-green-600 hover:bg-green-50'
                                   }`}
                                   disabled={feedbackStates[message.id] !== undefined || isLimitReached}
                                 >
@@ -1401,39 +1384,46 @@ export default function ChatPage() {
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleFeedback(message.id, 'thumbs_down', message)}
-                                  className={`text-xs p-1 h-6 ${
+                                  className={`p-1 h-6 w-6 ${
                                     feedbackStates[message.id] === 'thumbs_down' 
                                       ? 'text-red-600 bg-red-50' 
                                       : isLimitReached 
                                         ? 'text-gray-400 cursor-not-allowed' 
-                                        : 'text-gray-600 hover:text-red-600'
+                                        : 'text-gray-600 hover:text-red-600 hover:bg-red-50'
                                   }`}
                                   disabled={feedbackStates[message.id] !== undefined || isLimitReached}
                                 >
                                   <ThumbsDown className="w-3 h-3" />
                                 </Button>
+                                {feedbackStates[message.id] && (
+                                  <span className="text-xs text-green-600 ml-1">✓</span>
+                                )}
                               </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => toggleFeedbackForm(message.id)}
-                                className={`text-xs flex items-center space-x-1 ${
-                                  isLimitReached 
-                                    ? 'text-gray-400 cursor-not-allowed' 
-                                    : 'text-gray-600 hover:text-gray-900'
-                                }`}
-                                disabled={isLimitReached}
-                              >
-                                <MessageCircle className="w-3 h-3" />
-                                <span>Add comment</span>
-                              </Button>
+                              
+                              {/* Comment button - only show if no feedback given yet */}
+                              {!feedbackStates[message.id] && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => toggleFeedbackForm(message.id)}
+                                  className={`text-xs h-6 px-2 ${
+                                    isLimitReached 
+                                      ? 'text-gray-400 cursor-not-allowed' 
+                                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                  }`}
+                                  disabled={isLimitReached}
+                                >
+                                  <MessageCircle className="w-3 h-3 mr-1" />
+                                  Comment
+                                </Button>
+                              )}
                             </div>
                             
-                            {/* Feedback Form */}
+                            {/* Inline feedback form */}
                             {showFeedbackForm[message.id] && (
-                              <div className="mt-3 p-3 bg-gray-50 rounded-md">
+                              <div className="mt-2 flex items-end space-x-2">
                                 <textarea
-                                  placeholder={isLimitReached ? "Upgrade to premium to provide feedback..." : "Add your feedback or suggestions..."}
+                                  placeholder={isLimitReached ? "Upgrade to premium to provide feedback..." : "Add your feedback..."}
                                   value={feedbackText[message.id] || ""}
                                   onChange={(e) => {
                                     if (isLimitReached) return
@@ -1441,17 +1431,20 @@ export default function ChatPage() {
                                       ...prev,
                                       [message.id]: e.target.value
                                     }))
+                                    // Auto-resize
+                                    e.target.style.height = 'auto'
+                                    e.target.style.height = Math.min(e.target.scrollHeight, 60) + 'px'
                                   }}
-                                  className={`w-full p-2 text-xs border border-gray-300 rounded-md resize-none ${isLimitReached ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                  rows={2}
+                                  className={`flex-1 p-2 text-xs border border-gray-300 rounded-md resize-none ${isLimitReached ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                  rows={1}
                                   disabled={isLimitReached}
                                 />
-                                <div className="flex justify-end space-x-2 mt-2">
+                                <div className="flex space-x-1">
                                   <Button
                                     variant="outline"
                                     size="sm"
                                     onClick={() => toggleFeedbackForm(message.id)}
-                                    className="text-xs"
+                                    className="text-xs h-8 px-2"
                                     disabled={isLimitReached}
                                   >
                                     Cancel
@@ -1460,19 +1453,12 @@ export default function ChatPage() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => handleFeedback(message.id, 'suggestion', message)}
-                                    className="text-xs"
+                                    className="text-xs h-8 px-2"
                                     disabled={!feedbackText[message.id]?.trim() || isLimitReached}
                                   >
-                                    Submit
+                                    Send
                                   </Button>
                                 </div>
-                              </div>
-                            )}
-                            
-                            {/* Feedback Submitted Message */}
-                            {feedbackStates[message.id] && (
-                              <div className="mt-2 text-xs text-green-600">
-                                ✓ Feedback submitted
                               </div>
                             )}
                           </div>
@@ -1606,64 +1592,41 @@ export default function ChatPage() {
           </div>
         </div>
 
-        <div className="border-t border-gray-200 bg-white p-4 flex-shrink-0">
+        <div className="border-t border-gray-200 bg-transparent p-4 flex-shrink-0">
           <div className="max-w-6xl mx-auto">
             {/* Chat Limit Banner */}
             <ChatLimitBanner variant="default" />
             
-            {/* Enhanced Suggestions Display */}
+            {/* Enhanced Suggestions Display - Horizontal Scrollable */}
             {(suggestions.length > 0 || suggestionsLoading) && (
-              <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-sm font-medium text-gray-900 flex items-center">
-                    <MessageSquare className="w-4 h-4 mr-2 text-blue-600" />
-                    Suggested Questions
-                  </h3>
+              <div className="mb-2 p-1.5 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 rounded-lg border border-blue-200/50 backdrop-blur-sm">
+                <div className="flex items-center justify-end mb-0.5">
                   {suggestionsLoading && (
                     <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
-                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce"></div>
+                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
+                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
                     </div>
                   )}
                 </div>
-                {/* Mobile: Show only 1 suggestion with horizontal scroll */}
-                <div className="block md:hidden">
-                  <div className="overflow-x-auto pb-2">
-                    <div className="flex space-x-2 min-w-max">
-                      {suggestions.slice(0, 6).map((suggestion, index) => (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setInput(suggestion)}
-                          className="text-xs h-auto p-2 text-left justify-start bg-white hover:bg-blue-50 border-blue-200 hover:border-blue-300 whitespace-nowrap flex-shrink-0 min-w-[200px]"
-                          disabled={isLoading}
-                        >
-                          <div className="truncate">
-                            {suggestion.length > 40 ? suggestion.slice(0, 40) + "..." : suggestion}
-                          </div>
-                        </Button>
-                      ))}
-                    </div>
+                {/* Horizontal scrollable suggestions for all screen sizes */}
+                <div className="overflow-x-auto pb-1">
+                  <div className="flex space-x-1.5 min-w-max">
+                    {suggestions.slice(0, 8).map((suggestion, index) => (
+                      <Button
+                        key={index}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setInput(suggestion)}
+                        className="text-xs h-7 px-2 py-1 text-left justify-start bg-white/80 hover:bg-blue-50/80 border-blue-200/50 hover:border-blue-300/50 whitespace-nowrap flex-shrink-0 min-w-[180px] max-w-[280px] backdrop-blur-sm"
+                        disabled={isLoading}
+                      >
+                        <div className="truncate">
+                          {suggestion.length > 40 ? suggestion.slice(0, 40) + "..." : suggestion}
+                        </div>
+                      </Button>
+                    ))}
                   </div>
-                </div>
-                {/* Desktop: Show grid layout */}
-                <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-2">
-                  {suggestions.slice(0, 6).map((suggestion, index) => (
-                    <Button
-                      key={index}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setInput(suggestion)}
-                      className="text-xs h-auto p-2 text-left justify-start bg-white hover:bg-blue-50 border-blue-200 hover:border-blue-300"
-                      disabled={isLoading}
-                    >
-                      <div className="truncate">
-                        {suggestion.length > 50 ? suggestion.slice(0, 50) + "..." : suggestion}
-                      </div>
-                    </Button>
-                  ))}
                 </div>
               </div>
             )}
@@ -1691,86 +1654,73 @@ export default function ChatPage() {
               </div>
             )}
 
-            {/* Fallback Suggestions */}
+            {/* Fallback Suggestions - Horizontal Scrollable */}
             {suggestions.length === 0 && !suggestionsLoading && (
-              <div className="mb-4 p-3 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg border border-orange-200">
-                <h3 className="text-sm font-medium text-gray-900 mb-2 flex items-center">
-                  <MessageSquare className="w-4 h-4 mr-2 text-orange-600" />
-                  Quick Start Questions
-                </h3>
-                {/* Mobile: Show only 1 suggestion with horizontal scroll */}
-                <div className="block md:hidden">
-                  <div className="overflow-x-auto pb-2">
-                    <div className="flex space-x-2 min-w-max">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setInput("Show me top performing raiders this season")}
-                        className="text-xs h-auto p-2 text-left justify-start bg-white hover:bg-orange-50 border-orange-200 hover:border-orange-300 whitespace-nowrap flex-shrink-0 min-w-[150px]"
-                        disabled={isLoading}
-                      >
-                        Top Raiders
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setInput("Analyze team defensive strategies")}
-                        className="text-xs h-auto p-2 text-left justify-start bg-white hover:bg-orange-50 border-orange-200 hover:border-orange-300 whitespace-nowrap flex-shrink-0 min-w-[150px]"
-                        disabled={isLoading}
-                      >
-                        Defense Analysis
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setInput("Compare match performance trends")}
-                        className="text-xs h-auto p-2 text-left justify-start bg-white hover:bg-orange-50 border-orange-200 hover:border-orange-300 whitespace-nowrap flex-shrink-0 min-w-[150px]"
-                        disabled={isLoading}
-                      >
-                        Match Trends
-                      </Button>
-                    </div>
+              <div className="mb-2 p-1.5 bg-gradient-to-r from-orange-50/50 to-red-50/50 rounded-lg border border-orange-200/50 backdrop-blur-sm">
+                {/* Horizontal scrollable fallback suggestions for all screen sizes */}
+                <div className="overflow-x-auto pb-1">
+                  <div className="flex space-x-1.5 min-w-max">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setInput("Show me top performing raiders this season")}
+                      className="text-xs h-7 px-2 py-1 text-left justify-start bg-white/80 hover:bg-orange-50/80 border-orange-200/50 hover:border-orange-300/50 whitespace-nowrap flex-shrink-0 min-w-[120px] backdrop-blur-sm"
+                      disabled={isLoading}
+                    >
+                      Top Raiders
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setInput("Analyze team defensive strategies")}
+                      className="text-xs h-7 px-2 py-1 text-left justify-start bg-white/80 hover:bg-orange-50/80 border-orange-200/50 hover:border-orange-300/50 whitespace-nowrap flex-shrink-0 min-w-[120px] backdrop-blur-sm"
+                      disabled={isLoading}
+                    >
+                      Defense Analysis
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setInput("Compare match performance trends")}
+                      className="text-xs h-7 px-2 py-1 text-left justify-start bg-white/80 hover:bg-orange-50/80 border-orange-200/50 hover:border-orange-300/50 whitespace-nowrap flex-shrink-0 min-w-[120px] backdrop-blur-sm"
+                      disabled={isLoading}
+                    >
+                      Match Trends
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setInput("Show team performance statistics")}
+                      className="text-xs h-7 px-2 py-1 text-left justify-start bg-white/80 hover:bg-orange-50/80 border-orange-200/50 hover:border-orange-300/50 whitespace-nowrap flex-shrink-0 min-w-[120px] backdrop-blur-sm"
+                      disabled={isLoading}
+                    >
+                      Team Stats
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setInput("Analyze player raid success rates")}
+                      className="text-xs h-7 px-2 py-1 text-left justify-start bg-white/80 hover:bg-orange-50/80 border-orange-200/50 hover:border-orange-300/50 whitespace-nowrap flex-shrink-0 min-w-[120px] backdrop-blur-sm"
+                      disabled={isLoading}
+                    >
+                      Raid Analysis
+                    </Button>
                   </div>
-                </div>
-                {/* Desktop: Show grid layout */}
-                <div className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setInput("Show me top performing raiders this season")}
-                    className="text-xs h-auto p-2 text-left justify-start bg-white hover:bg-orange-50 border-orange-200 hover:border-orange-300"
-                    disabled={isLoading}
-                  >
-                    Top Raiders
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setInput("Analyze team defensive strategies")}
-                    className="text-xs h-auto p-2 text-left justify-start bg-white hover:bg-orange-50 border-orange-200 hover:border-orange-300"
-                    disabled={isLoading}
-                  >
-                    Defense Analysis
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setInput("Compare match performance trends")}
-                    className="text-xs h-auto p-2 text-left justify-start bg-white hover:bg-orange-50 border-orange-200 hover:border-orange-300"
-                    disabled={isLoading}
-                  >
-                    Match Trends
-                  </Button>
                 </div>
               </div>
             )}
             
             {/* Input Section */}
-            <div className="flex space-x-2">
-                <Input
+            <div className="space-y-1">
+              {/* Input with send button inside */}
+              <div className="relative">
+                <Textarea
                   value={input}
                   onChange={(e) => {
                     setInput(e.target.value)
+                    // Auto-resize textarea
+                    e.target.style.height = 'auto'
+                    e.target.style.height = Math.min(e.target.scrollHeight, 80) + 'px'
                     // Debounce input changes to prevent rapid requests
                     if (debounceTimer) {
                       clearTimeout(debounceTimer)
@@ -1781,20 +1731,42 @@ export default function ChatPage() {
                     setDebounceTimer(timer)
                   }}
                   placeholder="Ask about player stats, match analysis, team performance..."
-                  className="flex-1 min-w-0"
-                  onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                  className="w-full min-h-[36px] max-h-[80px] pr-10 resize-none text-sm"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault()
+                      handleSendMessage()
+                    }
+                  }}
+                  rows={1}
                 />
-              <Button
-                onClick={handleSendMessage}
-                disabled={!input.trim() || isLoading}
-                className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!input.trim() || isLoading}
+                  className="absolute bottom-1.5 right-1.5 h-7 w-7 p-0 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+                  size="sm"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Floating Summary Button */}
+      <Button
+        onClick={handleGenerateSummary}
+        disabled={!currentChatId || messages.length <= 1 || isGeneratingSummary || isLimitReached || summaryCount >= maxSummaries}
+        className={`fixed bottom-20 right-6 h-12 w-12 rounded-full shadow-lg z-40 transition-all duration-300 ${
+          !currentChatId || messages.length <= 1 || isLimitReached || summaryCount >= maxSummaries 
+            ? 'opacity-50 cursor-not-allowed bg-gray-400' 
+            : 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 hover:scale-105'
+        }`}
+        title={!currentChatId || messages.length <= 1 ? "Start a conversation to generate summary" : isGeneratingSummary ? "Generating summary..." : `Generate summary (${summaryCount}/${maxSummaries} used)`}
+      >
+        <File className="w-5 h-5 text-white" />
+      </Button>
 
       {/* Subscription Modal moved to global layout via ClientGlobalUI */}
 
@@ -1807,16 +1779,22 @@ export default function ChatPage() {
               <Button variant="ghost" size="sm" onClick={() => setIsTeamModalOpen(false)} className="text-gray-500"><X className="w-4 h-4" /></Button>
             </div>
             <p className="text-sm text-gray-600 mb-3">We&apos;ll tailor suggested questions to your team.</p>
-            <div className="space-y-2 mb-4">
-              {/* Simple preset list; adjust as needed */}
-                                      {['Bengaluru Bulls', 'Telugu Titans', 'Puneri Paltan', 'Haryana Steelers', 'U Mumba', 'Jaipur Pink Panthers'].map((team) => (
-                          <Button key={team} variant={selectedTeam === team ? 'default' : 'outline'} size="sm" className="w-full justify-start" onClick={() => setSelectedTeam(team)}>
-                            <div className="flex items-center gap-2">
-                              <TeamLogo teamName={team} size="sm" />
-                              <span>{team}</span>
-                            </div>
-                          </Button>
-                        ))}
+            <div className="space-y-2 mb-4 max-h-80 overflow-y-auto">
+              {/* All teams from TEAM_LOGOS */}
+              {Object.keys(TEAM_LOGOS).map((team) => (
+                <Button 
+                  key={team} 
+                  variant={selectedTeam === team ? 'default' : 'outline'} 
+                  size="sm" 
+                  className="w-full justify-start" 
+                  onClick={() => setSelectedTeam(team)}
+                >
+                  <div className="flex items-center gap-2">
+                    <TeamLogo teamName={team} size="sm" />
+                    <span>{team}</span>
+                  </div>
+                </Button>
+              ))}
             </div>
             <div className="flex items-center space-x-2">
               <Input placeholder="Or type your team name" value={selectedTeam} onChange={(e) => setSelectedTeam(e.target.value)} />

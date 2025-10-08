@@ -739,8 +739,7 @@ export default function DashboardPage() {
                                   </div>
                                   <div>
                                     <div className="font-bold text-gray-900 text-lg">{team.team}</div>
-                                    <div className="text-xs text-gray-500 font-medium">{team.teamCode}</div>
-                                  </div>
+1                                  </div>
                                 </div>
                                 <div className="text-right">
                                   <div className="text-xl font-bold text-gray-900">{value.toLocaleString()}</div>

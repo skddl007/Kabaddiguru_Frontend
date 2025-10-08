@@ -2,44 +2,90 @@
   "pages": {
     "/layout": [
       "static/chunks/webpack.js",
+      "static/chunks/vendors.js",
       "static/chunks/main-app.js",
+      "static/chunks/default-_app-pages-browser_components_ui_button_tsx-_app-pages-browser_components_ui_card_tsx-48f887.js",
+      "static/chunks/default-_app-pages-browser_components_SubscriptionModal_jsx.js",
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
     "/page": [
       "static/chunks/webpack.js",
+      "static/chunks/vendors.js",
       "static/chunks/main-app.js",
+      "static/chunks/default-_app-pages-browser_components_ui_button_tsx-_app-pages-browser_components_ui_card_tsx-48f887.js",
+      "static/chunks/default-_app-pages-browser_components_AuthModal_jsx.js",
+      "static/chunks/default-_app-pages-browser_components_SubscriptionModal_jsx.js",
+      "static/chunks/default-_app-pages-browser_components_MobileMenu_jsx.js",
       "static/chunks/app/page.js"
     ],
     "/api/auth/chat-limit/route": [
       "static/chunks/webpack.js",
+      "static/chunks/vendors.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/auth/chat-limit/route.js"
     ],
+    "/chat/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/vendors.js",
+      "static/chunks/main-app.js",
+      "static/chunks/default-_app-pages-browser_components_ui_button_tsx-_app-pages-browser_components_ui_card_tsx-48f887.js",
+      "static/chunks/default-_app-pages-browser_components_AuthModal_jsx.js",
+      "static/chunks/default-_app-pages-browser_components_AuthWrapper_jsx-_app-pages-browser_components_ChatLimit-5452cf.js",
+      "static/chunks/app/chat/page.js"
+    ],
+    "/api/suggestions/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/vendors.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/suggestions/route.js"
+    ],
+    "/analytics/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/vendors.js",
+      "static/chunks/main-app.js",
+      "static/chunks/default-_app-pages-browser_components_ui_button_tsx-_app-pages-browser_components_ui_card_tsx-48f887.js",
+      "static/chunks/default-_app-pages-browser_components_AuthModal_jsx.js",
+      "static/chunks/default-_app-pages-browser_components_AuthWrapper_jsx-_app-pages-browser_components_ChatLimit-5452cf.js",
+      "static/chunks/default-_app-pages-browser_components_MobileMenu_jsx.js",
+      "static/chunks/default-_app-pages-browser_components_ui_select_tsx.js",
+      "static/chunks/app/analytics/page.js"
+    ],
     "/dashboard/page": [
       "static/chunks/webpack.js",
+      "static/chunks/vendors.js",
       "static/chunks/main-app.js",
+      "static/chunks/default-_app-pages-browser_components_ui_button_tsx-_app-pages-browser_components_ui_card_tsx-48f887.js",
+      "static/chunks/default-_app-pages-browser_components_AuthModal_jsx.js",
+      "static/chunks/default-_app-pages-browser_components_SubscriptionModal_jsx.js",
+      "static/chunks/default-_app-pages-browser_components_AuthWrapper_jsx-_app-pages-browser_components_ChatLimit-5452cf.js",
+      "static/chunks/default-_app-pages-browser_components_MobileMenu_jsx.js",
+      "static/chunks/default-_app-pages-browser_components_ui_select_tsx.js",
       "static/chunks/app/dashboard/page.js"
-    ],
-    "/api/dashboard/filter-limit/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/dashboard/filter-limit/route.js"
     ],
     "/api/dashboard/overview/season-stats/route": [
       "static/chunks/webpack.js",
+      "static/chunks/vendors.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/dashboard/overview/season-stats/route.js"
     ],
-    "/api/dashboard/overview/team-performance/route": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/api/dashboard/overview/team-performance/route.js"
-    ],
     "/api/dashboard/overview/points-table/route": [
       "static/chunks/webpack.js",
+      "static/chunks/vendors.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/dashboard/overview/points-table/route.js"
+    ],
+    "/api/dashboard/filter-limit/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/vendors.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/dashboard/filter-limit/route.js"
+    ],
+    "/api/dashboard/overview/team-performance/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/vendors.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/dashboard/overview/team-performance/route.js"
     ]
   }
 }

@@ -20,6 +20,33 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Improve chunk loading and error handling
+  webpack: (config, { dev, isServer }) => {
+    // Add better error handling for chunk loading
+    if (!isServer) {
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        cacheGroups: {
+          default: {
+            minChunks: 2,
+            priority: -20,
+            reuseExistingChunk: true,
+          },
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            priority: -10,
+            chunks: 'all',
+          },
+        },
+      }
+    }
+    return config
+  },
+  // Add experimental features for better stability
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+  },
   env: {
     // Expose environment variables to the client
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
