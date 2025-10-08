@@ -15,7 +15,7 @@ set_production_env() {
     echo "Setting production environment..."
     cat > .env.local << EOF
 # Production Environment Configuration
-NEXT_PUBLIC_API_URL=https://api.thekabaddiguru.com
+NEXT_PUBLIC_API_URL=https://ddlsandeep-kabaddiguru-backend.hf.space
 NEXT_PUBLIC_APP_NAME=Kabaddi Guru Analytics
 NEXT_PUBLIC_APP_VERSION=1.0.0
 NEXT_PUBLIC_DEBUG_MODE=false

@@ -4,7 +4,7 @@
 This guide explains how to deploy the Kabaddi Guru frontend to Google Cloud Run using GitHub Actions CI/CD.
 
 ## Backend Configuration
-- **Production Backend URL**: `https://kabaddi-guru-backend-5uvrtavjca-uc.a.run.app`
+- **Production Backend URL**: `https://ddlsandeep-kabaddiguru-backend.hf.space`
 - **Local Development URL**: `http://localhost:8000`
 
 ## Prerequisites

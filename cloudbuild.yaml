@@ -10,7 +10,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: [
       'build',
-      '--build-arg', 'NEXT_PUBLIC_API_URL=https://api.thekabaddiguru.com',
+      '--build-arg', 'NEXT_PUBLIC_API_URL=https://ddlsandeep-kabaddiguru-backend.hf.space',
       '-t', 'gcr.io/$PROJECT_ID/kabaddi-frontend:latest',
       '.'
     ]

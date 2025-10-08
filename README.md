@@ -95,7 +95,7 @@ kabaddi_frontend/
    Create a `.env.local` file in the root directory:
    ```env
    # Backend API URL
-   NEXT_PUBLIC_API_URL=http://localhost:8000
+   NEXT_PUBLIC_API_URL=https://ddlsandeep-kabaddiguru-backend.hf.space
    
    # App Configuration
    NEXT_PUBLIC_APP_NAME=Kabaddi Guru Analytics
@@ -135,7 +135,7 @@ NEXT_PUBLIC_DEBUG_MODE=true
 
 ### Production
 ```env
-NEXT_PUBLIC_API_URL=https://api.thekabaddiguru.com
+NEXT_PUBLIC_API_URL=https://ddlsandeep-kabaddiguru-backend.hf.space
 NEXT_PUBLIC_DEBUG_MODE=false
 ```
 
