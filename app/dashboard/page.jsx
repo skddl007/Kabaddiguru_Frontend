@@ -107,6 +107,54 @@ export default function DashboardPage() {
   const [tableSearch, setTableSearch] = useState("")
   const [selectedSeason, setSelectedSeason] = useState("11")
 
+  // Correct Season 11 Points Table Data
+  const correctSeason11Data = [
+    { pos: "Q1", teamCode: "HS", team: "Haryana Steelers", played: 22, wins: 16, losses: 6, ties: 0, scoreDiff: 112, points: 84, status: "Champion" },
+    { pos: "Q2", teamCode: "DD", team: "Dabang Delhi", played: 22, wins: 13, losses: 5, ties: 4, scoreDiff: 85, points: 81, status: "Runner-up" },
+    { pos: "Q3", teamCode: "UP", team: "UP Yoddhas", played: 22, wins: 13, losses: 6, ties: 3, scoreDiff: 97, points: 79, status: "Semi-finalist" },
+    { pos: "Q4", teamCode: "PP", team: "Patna Pirates", played: 22, wins: 13, losses: 7, ties: 2, scoreDiff: 93, points: 77, status: "Semi-finalist" },
+    { pos: "Q5", teamCode: "UM", team: "U Mumba", played: 22, wins: 12, losses: 8, ties: 2, scoreDiff: 16, points: 71, status: "Playoff" },
+    { pos: "Q6", teamCode: "JP", team: "Jaipur Pink Panthers", played: 22, wins: 12, losses: 8, ties: 2, scoreDiff: 55, points: 70, status: "Playoff" },
+    { pos: "7", teamCode: "TT", team: "Telugu Titans", played: 22, wins: 12, losses: 10, ties: 0, scoreDiff: -40, points: 66, status: "League Stage" },
+    { pos: "8", teamCode: "PU", team: "Puneri Paltan", played: 22, wins: 9, losses: 10, ties: 3, scoreDiff: 61, points: 60, status: "League Stage" },
+    { pos: "9", teamCode: "TN", team: "Tamil Thalaivas", played: 22, wins: 8, losses: 13, ties: 1, scoreDiff: 16, points: 50, status: "League Stage" },
+    { pos: "10", teamCode: "BW", team: "Bengal Warriorz", played: 22, wins: 5, losses: 14, ties: 3, scoreDiff: -116, points: 41, status: "League Stage" },
+    { pos: "11", teamCode: "GG", team: "Gujarat Giants", played: 22, wins: 5, losses: 14, ties: 3, scoreDiff: -152, points: 38, status: "League Stage" },
+    { pos: "12", teamCode: "BB", team: "Bengaluru Bulls", played: 22, wins: 2, losses: 19, ties: 1, scoreDiff: -227, points: 19, status: "League Stage" }
+  ]
+
+  // Correct Season 10 Points Table Data
+  const correctSeason10Data = [
+    { pos: "Q1", teamCode: "PU", team: "Puneri Paltan", played: 22, wins: 17, losses: 2, ties: 3, scoreDiff: 253, points: 96, status: "Champion" },
+    { pos: "Q2", teamCode: "JP", team: "Jaipur Pink Panthers", played: 22, wins: 16, losses: 3, ties: 3, scoreDiff: 141, points: 92, status: "Runner-up" },
+    { pos: "Q3", teamCode: "DD", team: "Dabang Delhi", played: 22, wins: 13, losses: 6, ties: 3, scoreDiff: 53, points: 79, status: "Semi-finalist" },
+    { pos: "Q4", teamCode: "GG", team: "Gujarat Giants", played: 22, wins: 13, losses: 9, ties: 0, scoreDiff: 32, points: 70, status: "Semi-finalist" },
+    { pos: "Q5", teamCode: "HS", team: "Haryana Steelers", played: 22, wins: 13, losses: 8, ties: 1, scoreDiff: -13, points: 70, status: "Playoff" },
+    { pos: "Q6", teamCode: "PP", team: "Patna Pirates", played: 22, wins: 11, losses: 8, ties: 3, scoreDiff: 50, points: 69, status: "Playoff" },
+    { pos: "7", teamCode: "BW", team: "Bengal Warriorz", played: 22, wins: 9, losses: 11, ties: 2, scoreDiff: -43, points: 55, status: "League Stage" },
+    { pos: "8", teamCode: "BB", team: "Bengaluru Bulls", played: 22, wins: 8, losses: 12, ties: 2, scoreDiff: -67, points: 53, status: "League Stage" },
+    { pos: "9", teamCode: "TN", team: "Tamil Thalaivas", played: 22, wins: 9, losses: 13, ties: 0, scoreDiff: 32, points: 51, status: "League Stage" },
+    { pos: "10", teamCode: "UM", team: "U Mumba", played: 22, wins: 6, losses: 13, ties: 3, scoreDiff: -79, points: 45, status: "League Stage" },
+    { pos: "11", teamCode: "UP", team: "UP Yoddhas", played: 22, wins: 4, losses: 17, ties: 1, scoreDiff: -116, points: 31, status: "League Stage" },
+    { pos: "12", teamCode: "TT", team: "Telugu Titans", played: 22, wins: 2, losses: 19, ties: 1, scoreDiff: -243, points: 21, status: "League Stage" }
+  ]
+
+  // Correct Season 9 Points Table Data
+  const correctSeason9Data = [
+    { pos: "Q1", teamCode: "JP", team: "Jaipur Pink Panthers", played: 22, wins: 15, losses: 6, ties: 1, scoreDiff: 174, points: 82, status: "Champion" },
+    { pos: "Q2", teamCode: "PU", team: "Puneri Paltan", played: 22, wins: 14, losses: 6, ties: 2, scoreDiff: 66, points: 80, status: "Runner-up" },
+    { pos: "Q3", teamCode: "BB", team: "Bengaluru Bulls", played: 22, wins: 13, losses: 8, ties: 1, scoreDiff: 39, points: 74, status: "Semi-finalist" },
+    { pos: "Q4", teamCode: "UP", team: "UP Yoddhas", played: 22, wins: 12, losses: 8, ties: 2, scoreDiff: 42, points: 71, status: "Semi-finalist" },
+    { pos: "Q5", teamCode: "TN", team: "Tamil Thalaivas", played: 22, wins: 10, losses: 8, ties: 4, scoreDiff: 5, points: 66, status: "Playoff" },
+    { pos: "Q6", teamCode: "DD", team: "Dabang Delhi", played: 22, wins: 10, losses: 10, ties: 2, scoreDiff: 17, points: 63, status: "Playoff" },
+    { pos: "7", teamCode: "HS", team: "Haryana Steelers", played: 22, wins: 10, losses: 10, ties: 2, scoreDiff: 16, points: 61, status: "League Stage" },
+    { pos: "8", teamCode: "GG", team: "Gujarat Giants", played: 22, wins: 9, losses: 11, ties: 2, scoreDiff: -16, points: 59, status: "League Stage" },
+    { pos: "9", teamCode: "UM", team: "U Mumba", played: 22, wins: 10, losses: 12, ties: 0, scoreDiff: -28, points: 56, status: "League Stage" },
+    { pos: "10", teamCode: "PP", team: "Patna Pirates", played: 22, wins: 8, losses: 11, ties: 3, scoreDiff: -58, points: 54, status: "League Stage" },
+    { pos: "11", teamCode: "BW", team: "Bengal Warriorz", played: 22, wins: 8, losses: 11, ties: 3, scoreDiff: -12, points: 53, status: "League Stage" },
+    { pos: "12", teamCode: "TT", team: "Telugu Titans", played: 22, wins: 2, losses: 20, ties: 0, scoreDiff: -245, points: 15, status: "League Stage" }
+  ]
+
 
 
 
@@ -600,16 +648,27 @@ export default function DashboardPage() {
                         <tr className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
                           <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Pos ▲</th>
                           <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Team</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Played</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Won</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Loss</th>
-                          <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Drawn</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">P</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">W</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">L</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">T</th>
+                          <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Score Diff</th>
                           <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Pts</th>
                           <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Status</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {pointsTable
+                        {(() => {
+                          let currentData = pointsTable;
+                          if (selectedSeason === "11") {
+                            currentData = correctSeason11Data;
+                          } else if (selectedSeason === "10") {
+                            currentData = correctSeason10Data;
+                          } else if (selectedSeason === "9") {
+                            currentData = correctSeason9Data;
+                          }
+                          return currentData;
+                        })()
                           .filter(r => (tableSearch ? (r.team || '').toLowerCase().includes(tableSearch.toLowerCase()) : true))
                           .map((row, index) => {
                             // Determine row styling based on status
@@ -650,6 +709,11 @@ export default function DashboardPage() {
                                 <td className="py-4 px-4 text-gray-700">{row.wins ?? '-'}</td>
                                 <td className="py-4 px-4 text-gray-700">{row.losses ?? '-'}</td>
                                 <td className="py-4 px-4 text-gray-700">{row.ties ?? '-'}</td>
+                                <td className="py-4 px-4 text-gray-700">
+                                  <span className={`font-medium ${(row.scoreDiff ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    {row.scoreDiff ?? '-'}
+                                  </span>
+                                </td>
                                 <td className="py-4 px-4 text-gray-700">{row.points ?? '-'}</td>
                                 <td className="py-4 px-4">
                                   {row.status ? (
@@ -676,9 +740,19 @@ export default function DashboardPage() {
                               </tr>
                             )
                           })}
-                        {pointsTable.length === 0 && (
+                        {(() => {
+                          let currentData = pointsTable;
+                          if (selectedSeason === "11") {
+                            currentData = correctSeason11Data;
+                          } else if (selectedSeason === "10") {
+                            currentData = correctSeason10Data;
+                          } else if (selectedSeason === "9") {
+                            currentData = correctSeason9Data;
+                          }
+                          return currentData;
+                        })().length === 0 && (
                           <tr>
-                            <td className="py-8 text-center text-gray-500" colSpan={8}>
+                            <td className="py-8 text-center text-gray-500" colSpan={9}>
                               <div className="flex flex-col items-center gap-2">
                                 <Trophy className="h-8 w-8 text-gray-300" />
                                 <span>No points table data available</span>

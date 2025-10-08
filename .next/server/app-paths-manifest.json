@@ -1,12 +1,8 @@
 {
   "/api/dashboard/filter-limit/route": "app/api/dashboard/filter-limit/route.js",
+  "/api/dashboard/overview/points-table/route": "app/api/dashboard/overview/points-table/route.js",
   "/api/dashboard/overview/season-stats/route": "app/api/dashboard/overview/season-stats/route.js",
   "/api/dashboard/overview/team-performance/route": "app/api/dashboard/overview/team-performance/route.js",
-  "/api/dashboard/overview/points-table/route": "app/api/dashboard/overview/points-table/route.js",
-  "/api/auth/chat-limit/route": "app/api/auth/chat-limit/route.js",
-  "/api/suggestions/route": "app/api/suggestions/route.js",
-  "/page": "app/page.js",
-  "/chat/page": "app/chat/page.js",
-  "/analytics/page": "app/analytics/page.js",
-  "/dashboard/page": "app/dashboard/page.js"
+  "/dashboard/page": "app/dashboard/page.js",
+  "/players/page": "app/players/page.js"
 }
