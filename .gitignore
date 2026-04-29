@@ -171,3 +171,6 @@ service-account*.json
 
 # Local development
 .local
+
+.next
+node_modules
